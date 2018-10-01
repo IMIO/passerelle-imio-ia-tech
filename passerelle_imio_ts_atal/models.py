@@ -45,7 +45,6 @@ from suds.transport.http import HttpAuthenticated
 
 def get_client(model):
     try:
-        import ipdb;ipdb.set_trace()
         return soap_get_client(model)
     except ConnectionError as e:
         raise APIError('i-ImioAtal error: %s' % e)
@@ -100,93 +99,58 @@ class IImioAtal(BaseResource):
         return dict(client.service.testConnection(''))
 
     # https://demo-atal.imio-app.be/awa/services/DemandeService?wsdl    
-    @endpoint(serializer_type='json-api', perm='can_access')
+    @endpoint(serializer_type='json-api', perm='can_access', methods=['post'])
     def insertDemande(self, request):
-        client = get_client(self)
-        return dict(client.service.insertDemande(u'Boulanger',
-                                                 u'0496444999',
-                                                 u'boulch@imio.be',
-                                                 u'58, rue la-bas - 5300 here',
-                                                 u'Travaux chaussee',
-                                                 u'Andenne',
-                                                 u'Nid de poule avec les poussins en plus.',
-                                                 u'rue du Poulalier',
-                                                 u'',
-                                                 u'',
-                                                 u'07/01/2019'))
+        data = dict([(x, request.GET[x]) for x in request.GET.keys()])
+        if request.body:
+            load = json.loads(request.body)
+            # get fields from form.
+            data.update(load.get("fields"))
+            ws_params = load['extra']
+            client = get_client(self)
+            if ws_params['coordX'] is None or ws_params['coordY'] is None:
+                return client.service.insertDemande(ws_params['contactNom'],
+                                                 ws_params['contactTelephone'],
+                                                 ws_params['contactCourriel'],
+                                                 ws_params['contactAdresse'],
+                                                 ws_params['demandeObjet'],
+                                                 ws_params['demandeLieu'],
+                                                 ws_params['demandeDescription'],
+                                                 ws_params['remoteAddress'],
+                                                 ws_params['codeEquipement'],
+                                                 ws_params['codeServiceDemandeur'],
+                                                 ws_params['dateSouhaitee'])
+            else:
+                return self.insertDemandeXYByType(ws_params['contactNom'], 
+                                                 ws_params['contactTelephone'],
+                                                 ws_params['contactCourriel'],
+                                                 ws_params['contactAdresse'],
+                                                 ws_params['demandeObjet'],
+                                                 ws_params['demandeLieu'],
+                                                 ws_params['demandeDescription'],
+                                                 ws_params['remoteAddress'],
+                                                 ws_params['codeEquipement'],
+                                                 ws_params['codeServiceDemandeur'],
+                                                 ws_params['dateSouhaitee'],
+                                                 ws_params['typeDemande'],
+                                                 ws_params['coordX'],
+                                                 ws_params['coordY'])
+        else:
+            return False
 
-#    @endpoint(serializer_type='json-api', perm='can_access')
-#    def test_createItem(self, request):
-#        client = get_client(self)
-#        return dict(client.service.createItem('meeting-config-college', 'dirgen',
-#                                  {'title': 'CREATION DE POINT TS2',
-#                                  'description': 'My new item description',
-#                                  'decision': 'My decision'}))
-#
-#    # uid="uidplone", showExtraInfos="1", showAnnexes="0", showTemplates="0"
-#    @endpoint(serializer_type='json-api', perm='can_access', methods=['post','get'])
-#    def getItemInfos(self, request, *args, **kwargs):
-#        id_delib_extraInfos = {}
-#        if request.body:
-#            load = json.loads(request.body)
-#            ws_params = load['extra']
-#            uid = ws_params['uid']
-#            showExtraInfos = ws_params['showExtraInfos'] or "1"
-#            showAnnexes = ws_params['showAnnexes'] or "0"
-#            showTemplates = ws_params['showTemplates'] or "0"
-#        else:
-#            get = request.GET
-#            uid = "uid" in get and get["uid"]
-#            showExtraInfos = "showExtraInfos" in get and get["showExtraInfos"] or "1" 
-#            showAnnexes = "showAnnexes" in get and get["showAnnexes"] or "0"
-#            showTemplates = "showTemplates" in get and get["showTemplates"] or "0"
-#        client = get_client(self)
-#        try:
-#            ia_delib_raw = client.service.getItemInfos(uid,
-#                                           showExtraInfos,
-#                                           showAnnexes,
-#                                           showTemplates)
-#        except:
-#            raise Exception("Don't find UID IA Delib point ?")
-#        ia_delib_infos = dict((k, v.encode('utf8') if hasattr(v, 'encode') else v) for (k, v) in ia_delib_raw[0]
-#                                           if k not in ['extraInfos'])
-#        ia_delib_extraInfos = dict((k, v.encode('utf8') if hasattr(v, 'encode') else v) for (k, v) in ia_delib_raw[0]['extraInfos'])
-#
-#        ia_delib_infos.update(ia_delib_extraInfos)
-#        return ia_delib_infos
-#    
-#    @endpoint(serializer_type='json-api', perm='can_access', methods=['post'])
-#    def createItem_OLD(self, request, meetingConfigId, proposingGroupId, title, description,decision):
-#        creationData ={'title':title,
-#                       'description':description,
-#                       'decision':decision
-#                      }
-#        client = get_client(self)
-#        return dict(client.service.createItem(meetingConfigId,
-#                                              proposingGroupId,
-#                                              creationData))
-#    
-#    @endpoint(serializer_type='json-api', perm='can_access', methods=['post'])
-#    def createItem(self, request, *args, **kwargs):
-#        data = dict([(x, request.GET[x]) for x in request.GET.keys()])
-#        extraAttrs = {}
-#        if request.body:
-#            load = json.loads(request.body)
-#            # get fields from form.
-#            data.update(load.get("fields"))
-#            ws_params = load['extra']
-#            # if 'extraAttrs' in ws_params:
-#            #else:
-#            creationData ={'title':ws_params['title'],
-#                           'description':ws_params['description'],
-#                           'detailedDescription':ws_params['detailedDescription'],
-#                           'decision':ws_params['decision'],
-#                           'extraAttrs':extraAttrs
-#                          }
-#            client = get_client(self)
-#            new_point = dict(client.service.createItem(ws_params['meetingConfigId'],
-#                                              ws_params['proposingGroupId'],
-#                                              creationData))
-#            return new_point
-#        else:
-#            raise ValueError('createItem : request body!')
+    @endpoint(serializer_type='json-api', perm='can_access', methods=['post'])
+    def upload(self, request):
+        data = dict([(x, request.GET[x]) for x in request.GET.keys()])
+        extraAttrs = {}
+        if request.body:
+            load = json.loads(request.body)
+            # get fields from form.
+            data.update(load.get("fields"))
+            ws_params = load['extra']
+            client = get_client(self)
+            client.service.upload(ws_params['numeroDemande'],
+                                ws_params['fileName'],
+                                ws_params['fileContent'])
+            return True
+        else:
+            return False
