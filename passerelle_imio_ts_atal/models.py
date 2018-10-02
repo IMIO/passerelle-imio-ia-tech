@@ -121,7 +121,7 @@ class IImioAtal(BaseResource):
                                                  ws_params['codeServiceDemandeur'],
                                                  ws_params['dateSouhaitee'])
             else:
-                return self.insertDemandeXYByType(ws_params['contactNom'], 
+                return client.service.insertDemandeXYByType(ws_params['contactNom'], 
                                                  ws_params['contactTelephone'],
                                                  ws_params['contactCourriel'],
                                                  ws_params['contactAdresse'],
@@ -147,10 +147,12 @@ class IImioAtal(BaseResource):
             # get fields from form.
             data.update(load.get("fields"))
             ws_params = load['extra']
+            filename = ws_params['fichier'].get('filename')
+            content = ws_params['fichier'].get('content')
             client = get_client(self)
             client.service.upload(ws_params['numeroDemande'],
-                                ws_params['fileName'],
-                                ws_params['fileContent'])
+                                filename,
+                                content)
             return True
         else:
             return False
