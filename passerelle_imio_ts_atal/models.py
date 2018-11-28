@@ -108,7 +108,8 @@ class IImioAtal(BaseResource):
             data.update(load.get("fields"))
             ws_params = load['extra']
             client = get_client(self)
-            if ws_params['coordX'] is None or ws_params['coordY'] is None:
+            if 'coordX' not in ws_params or ws_params['coordX'] is None:
+                # ws_params['coordX'] is None or ws_params['coordY'] is None:
                 return client.service.insertDemande(ws_params['contactNom'],
                                                  ws_params['contactTelephone'],
                                                  ws_params['contactCourriel'],
@@ -156,3 +157,23 @@ class IImioAtal(BaseResource):
             return True
         else:
             return False
+
+    @endpoint(serializer_type='json-api', perm='can_access', methods=['post'])
+    def retrieveDetailsDemande(self, request):
+        data = dict([(x, request.GET[x]) for x in request.GET.keys()])
+        if request.body:
+            load = json.loads(request.body)
+            # get fields from form.
+            data.update(load.get("fields"))
+            ws_params = load['extra']
+            client = get_client(self)
+            # suds complex item object
+            demande = client.service.retrieveDetailsDemande(ws_params['numeroDemande'])
+            # dict brute.
+            # retour = client.dict(demande)
+            data = {'codeDemande':demande.codeDemande or None,
+                    'commentairesDestinataires':demande.commentairesDestinataires or None,
+                    'etatDemande':demande.etatDemande.description or None,
+                    'objetDemande':demande.objetDemande or None
+            }
+            return data
