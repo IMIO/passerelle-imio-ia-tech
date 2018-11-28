@@ -77,7 +77,7 @@ class Transport(HttpAuthenticated):
                 headers=request.headers, **self.get_requests_kwargs())
         return Reply(resp.status_code, resp.headers, resp.content)
 
-# plugins=[Handlewsdl(), Filter()]
+# plugins=[Handlewsdl(), Filter()], plugins=[ImportDoctor(imp)]
 def get_client(instance):
     transport = Transport(instance)
-    return Client(instance.wsdl_url, transport=transport, cache=None)
+    return Client(instance.wsdl_url, plugins=[], transport=transport, cache=None, autoblend=True)
