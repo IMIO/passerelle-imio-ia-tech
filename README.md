@@ -27,20 +27,3 @@ Usage
 Usage in w.c.s.
 ---------------
 
- - createItem
-   - url sample with get method
-     createItem?meetingConfigId=meeting-config-college&proposingGroupId=dirgen&title=Mon%20nouveau%20point&description=Ma%20nouvelle%20description&decision=Ma%20nouvelle%20decision
-
-   - wcs workflow action "call webservice"
-     URL : 
-         http://local-passerelle.example.net/passerelle-imio-ts-atal/ts-atal-connecteur/createItem
-     SEND POST DATA :      
-         proposingGroupId : dirgen
-         meetingConfigId : meeting-config-college
-         description : ="{} {} {} {} {}".format("Réservation de la salle :",form_var_salle,"par", form_var_prenom, form_var_nom)
-         title : My title
-         decision : My decision
-
-         extraAttrs : [{"key":"detailedDescription","value":"<p>{}</p>".format(form_var_user_description)}]
-      OR
-         detailedDescription : [form_var_user_description]
