@@ -5,7 +5,7 @@ Priority: optional
 Build-Depends: python-setuptools (>= 0.6b3), python-all (>= 2.6.6-3), debhelper (>= 9), python-django
 Standards-Version: 3.9.1
 
-Package: python-passerelle-imio-ts-atal
+Package: python-passerelle-imio-ia-tech
 Architecture: all
 Depends: ${misc:Depends}, ${python:Depends}
 Description: Passerelle connector to ATAL
