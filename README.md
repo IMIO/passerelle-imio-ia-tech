@@ -5,10 +5,10 @@ Installation
 ------------
 
  - add to Passerelle installed apps settings:
-   INSTALLED_APPS += ('passerelle_imio_ts_atal',)
+   INSTALLED_APPS += ('passerelle_imio_ia_tech',)
 
  - enable module:
-   PASSERELLE_APP_PASSERELLE_IMIO_TS_ATAL_ENABLED = True
+   PASSERELLE_APP_PASSERELLE_IMIO_IA_TECH_ENABLED = True
 
 
 Usage

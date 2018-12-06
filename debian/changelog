@@ -1,0 +1,5 @@
+passerelle-imio-ia-tech (0.0) unstable; urgency=low
+
+  * Initial packaging work with dpkg-buildpackage.
+
+ -- Christophe Boulanger <christophe.boulanger@imio.be>  Wed, 26 Sep 2018 14:00:53 +0100

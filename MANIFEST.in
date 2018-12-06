@@ -1,6 +1,6 @@
-recursive-include passerelle_imio_ts_atal/static *.css *.png
-recursive-include passerelle_imio_ts_atal/templates *.html *.txt
-recursive-include passerelle_imio_ts_atal/locale *.po *.mo
+recursive-include passerelle_imio_ia_tech/static *.css *.png
+recursive-include passerelle_imio_ia_tech/templates *.html *.txt
+recursive-include passerelle_imio_ia_tech/locale *.po *.mo
 include MANIFEST.in
 include VERSION
 include README

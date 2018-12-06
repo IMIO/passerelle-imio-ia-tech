@@ -54,7 +54,7 @@ class compile_translations(Command):
     def run(self):
         try:
             from django.core.management import call_command
-            for path, dirs, files in os.walk('passerelle_imio_ts_atal'):
+            for path, dirs, files in os.walk('passerelle_imio_ia_tech'):
                 if 'locale' not in dirs:
                     continue
                 curdir = os.getcwd()
@@ -76,24 +76,23 @@ class install_lib(_install_lib):
 
 
 setup(
-    name='passerelle-imio-ts-atal',
+    name='passerelle-imio-ia-tech',
     version=get_version(),
     author='Christophe Boulanger',
     author_email='christophe.boulanger@imio.be',
     packages=find_packages(),
     include_package_data=True,
-    url='https://dev.entrouvert.org/projects/imio/',
+    url='https://github.com/IMIO/passerelle-imio-ia-tech',
     classifiers=[
-        'Development Status :: 2 - Pre-Alpha',
+        'Development Status :: Pre-Alpha',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Operating System :: OS Independent',
-        'Programming Language :: Python',
         'Programming Language :: Python :: 2',
     ],
-    install_requires=['django>=1.7, <1.8',
+    install_requires=['django>=1.7, <1.9',
         ],
     zip_safe=False,
     cmdclass={
