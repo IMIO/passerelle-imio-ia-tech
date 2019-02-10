@@ -13,7 +13,7 @@ pipeline {
                 VERSION= sh (script: "sh version.sh", returnStdout: true)
             }
             steps {
-                sh "fpm -a amd64 -n passerelle-imio-ia-tech -s python -t deb -v `echo ${VERSION}` --prefix /usr -d passerelle setup.py"
+                sh "fpm -a amd64 -n passerelle-imio-ia-tech -s python -t deb -v `echo ${VERSION}` --python-install-lib /usr/lib/python2.7/dist-packages -d passerelle setup.py"
                 withCredentials([string(credentialsId: 'gpg-passphrase-system@imio.be', variable:'PASSPHRASE')]){
                     sh ('''dpkg-sig --gpg-options "--yes --batch --passphrase '$PASSPHRASE' " -s builder -k 9D4C79E197D914CF60C05332C0025EEBC59B875B passerelle-imio-ia-tech_`echo ${VERSION}`_amd64.deb''')
                 }
@@ -24,11 +24,17 @@ pipeline {
                 VERSION= sh (script: "sh version.sh", returnStdout: true)
             }
             steps {
-                withCredentials([usernameColonPassword(credentialsId: 'nexus-teleservices', variable: 'CREDENTIALS'),string(credentialsId: 'nexus-url', variable:'NEXUS_URL')]) {
-                    sh ('curl -v --fail -u $CREDENTIALS -X POST -H Content-Type:multipart/form-data --data-binary @passerelle-imio-ia-tech_`echo ${VERSION}`_amd64.deb $NEXUS_URL')
+                withCredentials([usernameColonPassword(credentialsId: 'nexus-teleservices', variable: 'CREDENTIALS'),string(credentialsId: 'nexus-url-stretch', variable:'NEXUS_URL_STRETCH')]) {
+                    sh ('curl -v --fail -u $CREDENTIALS -X POST -H Content-Type:multipart/form-data --data-binary @passerelle-imio-ia-tech_`echo ${VERSION}`_amd64.deb $NEXUS_URL_STRETCH')
                 }
             }
         }
+    }
+    post {
+        always {
+            sh "rm -f passerelle-imio-ia-tech_*.deb"
+        }
+
     }
 }
 
