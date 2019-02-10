@@ -15,19 +15,19 @@ from setuptools import setup, find_packages
 
 class eo_sdist(sdist):
     def run(self):
-        if os.path.exists('VERSION'):
-            os.remove('VERSION')
+        if os.path.exists('version'):
+            os.remove('version')
         version = get_version()
-        version_file = open('VERSION', 'w')
+        version_file = open('version', 'w')
         version_file.write(version)
         version_file.close()
         sdist.run(self)
-        if os.path.exists('VERSION'):
-            os.remove('VERSION')
+        if os.path.exists('version'):
+            os.remove('version')
 
 def get_version():
-    if os.path.exists('VERSION'):
-        version_file = open('VERSION', 'r')
+    if os.path.exists('version'):
+        version_file = open('version', 'r')
         version = version_file.read()
         version_file.close()
         return version
@@ -84,16 +84,16 @@ setup(
     include_package_data=True,
     url='https://github.com/IMIO/passerelle-imio-ia-tech',
     classifiers=[
-        'Development Status :: Pre-Alpha',
+        'Development Status :: 2 - Pre-Alpha',
         'Environment :: Web Environment',
         'Framework :: Django',
         'Intended Audience :: Developers',
         'License :: OSI Approved :: GNU Affero General Public License v3 or later (AGPLv3+)',
         'Operating System :: OS Independent',
+        'Programming Language :: Python',
         'Programming Language :: Python :: 2',
     ],
-    install_requires=['django>=1.7, <1.9',
-        ],
+    install_requires=['passerelle',],
     zip_safe=False,
     cmdclass={
         'build': build,
