@@ -18,32 +18,33 @@
 # and https://docs.oracle.com/cd/E50245_01/E50253/html/vmprg-soap-example-authentication-python.html
 
 
-import requests
 import StringIO
 
-from suds.client import Client
-from suds.transport.http import HttpAuthenticated
-from suds.transport import Reply
-from suds.plugin import MessagePlugin, DocumentPlugin
 
-from suds.sudsobject import asdict
+from suds.client import Client
+from suds.plugin import DocumentPlugin, MessagePlugin
+from suds.transport import Reply
+from suds.transport.http import HttpAuthenticated
 
 
 class Filter(MessagePlugin):
-
     def marshalled(self, context):
-        context.envelope.set('xmlns:xm', 'http://www.w3.org/2005/05/xmlmime')
+        context.envelope.set("xmlns:xm", "http://www.w3.org/2005/05/xmlmime")
 
     def received(self, context):
         reply = context.reply
-        context.reply = reply[reply.find("<?xml version"):reply.rfind(">") + 1]
+        context.reply = reply[reply.find("<?xml version"): reply.rfind(">") + 1]
+
 
 class Handlewsdl(DocumentPlugin):
-
     def loaded(self, context):
         # unknown types, so present them as strings
-        context.document = context.document.replace('type="iph:DossierID"', 'type="xsd:string"')
-        context.document = context.document.replace('type="iph:TypeTechnique"', 'type="xsd:string"')
+        context.document = context.document.replace(
+            'type="iph:DossierID"', 'type="xsd:string"'
+        )
+        context.document = context.document.replace(
+            'type="iph:TypeTechnique"', 'type="xsd:string"'
+        )
 
 
 class Transport(HttpAuthenticated):
@@ -54,30 +55,38 @@ class Transport(HttpAuthenticated):
     def get_requests_kwargs(self):
         kwargs = {}
         if self.model.username:
-            kwargs['auth'] = (self.model.username, self.model.password)
+            kwargs["auth"] = (self.model.username, self.model.password)
         if self.model.keystore:
-            kwargs['cert'] = (self.model.keystore.path, self.model.keystore.path)
+            kwargs["cert"] = (self.model.keystore.path, self.model.keystore.path)
         if not self.model.verify_cert:
-            kwargs['verify'] = False
+            kwargs["verify"] = False
         return kwargs
 
     def open(self, request):
         # only use our custom handler to fetch service resources, not schemas
         # from other namespaces
-        if 'www.w3.org' in request.url:
+        if "www.w3.org" in request.url:
             return HttpAuthenticated.open(self, request)
-        resp = self.model.requests.get(request.url, headers=request.headers,
-                **self.get_requests_kwargs())
+        resp = self.model.requests.get(
+            request.url, headers=request.headers, **self.get_requests_kwargs()
+        )
         return StringIO.StringIO(resp.content)
 
     def send(self, request):
         request.message = request.message.replace("contentType", "xm:contentType")
         self.addcredentials(request)
-        resp = self.model.requests.post(request.url, data=request.message,
-                headers=request.headers, **self.get_requests_kwargs())
+        resp = self.model.requests.post(
+            request.url,
+            data=request.message,
+            headers=request.headers,
+            **self.get_requests_kwargs()
+        )
         return Reply(resp.status_code, resp.headers, resp.content)
+
 
 # plugins=[Handlewsdl(), Filter()], plugins=[ImportDoctor(imp)]
 def get_client(instance):
     transport = Transport(instance)
-    return Client(instance.wsdl_url, plugins=[], transport=transport, cache=None, autoblend=True)
+    return Client(
+        instance.wsdl_url, plugins=[], transport=transport, cache=None, autoblend=True
+    )
