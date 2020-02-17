@@ -120,6 +120,7 @@ class IImioAtal(BaseResource):
                     ws_params["codeEquipement"],
                     ws_params["codeServiceDemandeur"],
                     ws_params["dateSouhaitee"],
+                    ws_params["typeDemande"]
                 )
             else:
                 return client.service.insertDemandeXYByType(
