@@ -108,7 +108,7 @@ class IImioAtal(BaseResource):
             client = get_client(self)
             if "coordX" not in ws_params or ws_params["coordX"] is None:
                 # ws_params['coordX'] is None or ws_params['coordY'] is None:
-                return client.service.insertDemande(
+                return client.service.insertDemandeByType(
                     ws_params["contactNom"],
                     ws_params["contactTelephone"],
                     ws_params["contactCourriel"],
