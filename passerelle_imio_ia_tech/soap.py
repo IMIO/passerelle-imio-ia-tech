@@ -17,8 +17,11 @@
 # borrowed from https://pypi.python.org/pypi/suds_requests
 # and https://docs.oracle.com/cd/E50245_01/E50253/html/vmprg-soap-example-authentication-python.html
 
-
-import StringIO
+try:
+    import StringIO
+    # from StringIO import StringIO ## for Python 2
+except ImportError:
+    from io import StringIO ## for Python 3
 
 
 from suds.client import Client
