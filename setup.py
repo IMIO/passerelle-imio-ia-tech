@@ -16,7 +16,6 @@ setup(
     packages=find_packages(),
     install_requires=[
         'django>=1.11',
-        'python3-passerelle',
         ],
     cmdclass={
         'install_lib': install_lib,
