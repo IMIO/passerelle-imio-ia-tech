@@ -5,3 +5,4 @@ Changelog
 ------------------
 
 - Adapt Jenkinsfile to install package python3/dist-package instead of python2
+[nhislaire] [dmuyshond]
