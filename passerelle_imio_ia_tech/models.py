@@ -101,7 +101,7 @@ class IImioAtal(BaseResource):
     def insertDemande(self, request):
         data = dict([(x, request.GET[x]) for x in request.GET.keys()])
         if request.body:
-            load = json.loads(request.body).decode('utf-8')
+            load = json.loads(request.body.decode('utf-8'))
             # get fields from form.
             data.update(load.get("fields"))
             ws_params = load["extra"]
@@ -146,7 +146,7 @@ class IImioAtal(BaseResource):
     def upload(self, request):
         data = dict([(x, request.GET[x]) for x in request.GET.keys()])
         if request.body:
-            load = json.loads(request.body).decode('utf-8')
+            load = json.loads(request.body.decode('utf-8'))
             # get fields from form.
             data.update(load.get("fields"))
             ws_params = load["extra"]
@@ -162,7 +162,7 @@ class IImioAtal(BaseResource):
     def retrieveDetailsDemande(self, request):
         data = dict([(x, request.GET[x]) for x in request.GET.keys()])
         if request.body:
-            load = json.loads(request.body).decode('utf-8')
+            load = json.loads(request.body.decode('utf-8'))
             # get fields from form.
             data.update(load.get("fields"))
             ws_params = load["extra"]
