@@ -88,7 +88,7 @@ class IImioAtal(BaseResource):
         return cls._meta.verbose_name
 
     @endpoint()
-    def test(self):
+    def test(self, request):
         return "True"
 
     @endpoint(serializer_type="json-api", perm="can_access")
