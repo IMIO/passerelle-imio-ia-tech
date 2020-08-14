@@ -72,7 +72,7 @@ class Transport(HttpAuthenticated):
         return BytesIO(resp.content)
 
     def send(self, request):
-        request.message = request.message.replace("contentType", "xm:contentType")
+        request.message = request.message.replace(b'contentType', b'xm:contentType')
         self.addcredentials(request)
         resp = self.model.requests.post(
             request.url,

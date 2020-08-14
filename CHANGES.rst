@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.2.1e
+------------------
+
+- [TELE-642] fix encoding again in soap.py
+
 0.2.1d
 ------------------
 
