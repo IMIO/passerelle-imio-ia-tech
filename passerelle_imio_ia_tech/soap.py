@@ -17,11 +17,7 @@
 # borrowed from https://pypi.python.org/pypi/suds_requests
 # and https://docs.oracle.com/cd/E50245_01/E50253/html/vmprg-soap-example-authentication-python.html
 
-try:
-    import StringIO
-    # from StringIO import StringIO ## for Python 2
-except ImportError:
-    from io import StringIO ## for Python 3
+from io import BytesIO
 
 
 from suds.client import Client
@@ -73,7 +69,7 @@ class Transport(HttpAuthenticated):
         resp = self.model.requests.get(
             request.url, headers=request.headers, **self.get_requests_kwargs()
         )
-        return StringIO.StringIO(resp.content)
+        return BytesIO(resp.content)
 
     def send(self, request):
         request.message = request.message.replace("contentType", "xm:contentType")

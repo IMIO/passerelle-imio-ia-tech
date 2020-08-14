@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.2.1d
+------------------
+
+- [TELE-638] In models, changes implementation of StringIO to be python3 complient
+- [TELE-640] Fix Test method by adding request as parameter
+- [TELE-641] Use BytesIO instead of StringIO
+
 0.2.1c
 ------------------
 
