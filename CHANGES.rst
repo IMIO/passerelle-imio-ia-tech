@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.2.1f
+------------------
+
+- [TELE-695] use passerelle json_load to avoid encoding issues [dmu]
+
 0.2.1e
 ------------------
 
