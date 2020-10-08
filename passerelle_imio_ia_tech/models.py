@@ -25,13 +25,12 @@
 # serializer_type='json-api' : Permet de serializer la reponse directement dans
 # un data + format automatique pour un raise exception.
 
-import json
-
 from requests.exceptions import ConnectionError
 
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from passerelle.base.models import BaseResource
+from passerelle.compat import json_loads
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
 
@@ -101,7 +100,7 @@ class IImioAtal(BaseResource):
     def insertDemande(self, request):
         data = dict([(x, request.GET[x]) for x in request.GET.keys()])
         if request.body:
-            load = json.loads(request.body.decode('utf-8'))
+            load = json_loads(request.body)
             # get fields from form.
             data.update(load.get("fields"))
             ws_params = load["extra"]
@@ -146,7 +145,7 @@ class IImioAtal(BaseResource):
     def upload(self, request):
         data = dict([(x, request.GET[x]) for x in request.GET.keys()])
         if request.body:
-            load = json.loads(request.body.decode('utf-8'))
+            load = json_loads(request.body)
             # get fields from form.
             data.update(load.get("fields"))
             ws_params = load["extra"]
@@ -162,7 +161,7 @@ class IImioAtal(BaseResource):
     def retrieveDetailsDemande(self, request):
         data = dict([(x, request.GET[x]) for x in request.GET.keys()])
         if request.body:
-            load = json.loads(request.body.decode('utf-8'))
+            load = json_loads(request.body)
             # get fields from form.
             data.update(load.get("fields"))
             ws_params = load["extra"]
