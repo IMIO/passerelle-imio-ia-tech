@@ -4,9 +4,11 @@
 from setuptools.command.install_lib import install_lib as _install_lib
 from setuptools import setup, find_packages
 
+
 class install_lib(_install_lib):
     def run(self):
         _install_lib.run(self)
+
 
 setup(
     name='passerelle-imio-ia-tech',
@@ -16,8 +18,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         'django>=1.11',
-        ],
+    ],
     cmdclass={
         'install_lib': install_lib,
-    }
+    },
 )
