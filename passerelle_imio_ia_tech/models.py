@@ -33,9 +33,9 @@ class imio_atal(BaseResource):
 
     @endpoint()
     def test(self):
-        response = requests.get(
+        atal_response = requests.get(
             url=self.base_url,
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
         )
-
-        return "True"
+        atal_response_format = "{} - {}".format(atal_response.status_code, atal_response.text)
+        return atal_response_format

@@ -1,6 +1,11 @@
 Changelog
 =========
 
+0.3.1
+------------------
+
+- [TELE-913] return test endpoint response and remode duplicate changes.rst
+
 0.3.0
 ------------------
 
