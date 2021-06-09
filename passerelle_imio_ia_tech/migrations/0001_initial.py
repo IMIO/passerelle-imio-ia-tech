@@ -17,15 +17,30 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='IImioAtal',
             fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                (
+                    'id',
+                    models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID'),
+                ),
                 ('title', models.CharField(max_length=50, verbose_name='Title')),
                 ('description', models.TextField(verbose_name='Description')),
                 ('slug', models.SlugField(unique=True, verbose_name='Identifier')),
                 ('wsdl_url', models.CharField(help_text='WSDL URL', max_length=128, verbose_name='WSDL URL')),
-                ('verify_cert', models.BooleanField(default=True, verbose_name='Check HTTPS Certificate validity')),
+                (
+                    'verify_cert',
+                    models.BooleanField(default=True, verbose_name='Check HTTPS Certificate validity'),
+                ),
                 ('username', models.CharField(blank=True, max_length=128, verbose_name='Username')),
                 ('password', models.CharField(blank=True, max_length=128, verbose_name='Password')),
-                ('keystore', models.FileField(blank=True, help_text='Certificate and private key in PEM format', null=True, upload_to=b'iparapheur', verbose_name='Keystore')),
+                (
+                    'keystore',
+                    models.FileField(
+                        blank=True,
+                        help_text='Certificate and private key in PEM format',
+                        null=True,
+                        upload_to=b'iparapheur',
+                        verbose_name='Keystore',
+                    ),
+                ),
                 ('users', models.ManyToManyField(blank=True, to='base.ApiUser')),
             ],
             options={
