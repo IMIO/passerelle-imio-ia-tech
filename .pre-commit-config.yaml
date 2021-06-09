@@ -1,0 +1,15 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+  - repo: https://github.com/psf/black
+    rev: 21.5b2
+    hooks:
+      - id: black
+        args:
+          [
+            "--target-version",
+            "py37",
+            "--skip-string-normalization",
+            "--line-length",
+            "110",
+          ]
