@@ -7,9 +7,7 @@ import requests
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from passerelle.base.models import BaseResource
-from passerelle.compat import json_loads
 from passerelle.utils.api import endpoint
-from passerelle.utils.jsonresponse import APIError
 
 
 class imio_atal(BaseResource):
@@ -19,7 +17,6 @@ class imio_atal(BaseResource):
         verbose_name=_("Base URL"),
         help_text=_("API base URL"),
     )
-    verify_cert = models.BooleanField(default=True, verbose_name=_("Check HTTPS Certificate validity"))
     api_key = models.CharField(max_length=128, verbose_name=_("API Key"))
 
     category = _("Business Process Connectors")
@@ -37,5 +34,7 @@ class imio_atal(BaseResource):
             url=self.base_url,
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
         )
-        atal_response_format = "{} - {}".format(atal_response.status_code, atal_response.text)
+        atal_response_format = "{} - {}".format(
+            atal_response.status_code, atal_response.text
+        )
         return atal_response_format

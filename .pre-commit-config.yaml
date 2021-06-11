@@ -11,5 +11,5 @@ repos:
             "py38",
             "--skip-string-normalization",
             "--line-length",
-            "110",
+            "88",
           ]
