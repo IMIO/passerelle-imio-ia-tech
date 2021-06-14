@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.3.4
+------------------
+
+- [TELE-913] add 0001_initial migration file [dmu]
+
+
 0.3.3
 ------------------
 
