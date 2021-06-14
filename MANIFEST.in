@@ -1,6 +1,4 @@
-recursive-include passerelle_imio_ia_tech/static *.css *.png
-recursive-include passerelle_imio_ia_tech/templates *.html *.txt
-recursive-include passerelle_imio_ia_tech/locale *.po *.mo
+include README
 include MANIFEST.in
 include VERSION
-include README
+recursive-include extra *.py
