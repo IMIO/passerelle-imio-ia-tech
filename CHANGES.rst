@@ -1,7 +1,13 @@
 Changelog
 =========
 
-0.3.1
+0.3.3
+------------------
+
+- [TELE-913] fix test endpoint url [dmu]
+
+
+0.3.2
 ------------------
 
 - [TELE-913] remove unused import and field + pre-commit and pyproject optim [dmu]

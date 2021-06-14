@@ -3,7 +3,6 @@
 
 import requests
 
-
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 from passerelle.base.models import BaseResource
@@ -28,10 +27,10 @@ class imio_atal(BaseResource):
     def get_verbose_name(cls):
         return cls._meta.verbose_name
 
-    @endpoint()
-    def test(self):
+    @endpoint(perm='can_access', description=_('Test methods'))
+    def Test(self, request):
         atal_response = requests.get(
-            url=self.base_url,
+            url=self.base_url + "api/Test",
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
         )
         atal_response_format = "{} - {}".format(
