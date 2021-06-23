@@ -135,7 +135,7 @@ class imio_atal(BaseResource):
         },
     )
     def create_work_request(self, request, *args, **kwargs):
-        data_from_publik = json_loads(request.body)
+        data_from_publik = json_loads(request.body)  # http data from wcs webservice
         # commented parameters below are not required
         data_to_atal = {
             "RequesterId": data_from_publik["atal_requester_id"],
@@ -167,10 +167,15 @@ class imio_atal(BaseResource):
         }
         """
         response = self.requests.post(
-            urljoin(self.base_url, '/api/WorksRequests'),
+            urljoin(
+                self.base_url,
+                '/api/WorksRequests',  # Endpoints are described in ATAl Swagger
+            ),
             json=data_to_atal,
             headers={
                 "accept": "application/json",
+                # X-API-KEY is visible in ATAL admin panel
+                # and set in the passerelle connector settings.
                 "X-API-Key": self.api_key,
                 "Content-Type": "application/json",
             },
@@ -204,8 +209,11 @@ class imio_atal(BaseResource):
         },
     )
     def post_attachment(self, request, *args, **kwargs):
-        data_from_publik = json_loads(request.body)
+        data_from_publik = json_loads(request.body)  # http data from wcs webservice
 
+        # ATAL 6 require a multipart/formdata request
+        # with a bytes encoded file. That's why we use
+        # BytesIO here to convert Base64 image from wcs to bytes
         decoded_image = base64.b64decode(
             data_from_publik["atal_attachment1"]["content"]
         )
@@ -215,12 +223,15 @@ class imio_atal(BaseResource):
             urljoin(
                 self.base_url,
                 '/api/WorksRequests/'
-                + data_from_publik["atal_work_request_uuid"]
-                + '/Attachments',
+                # uuid is fetched from ATAL work request creation response in wcs vars
+                + data_from_publik["atal_work_request_uuid"] + '/Attachments',
             ),
             headers={
+                # X-API-KEY is visible in ATAL admin panel
+                # and set in the passerelle connector settings.
                 "X-API-Key": self.api_key,
             },
+            # This is multipart/formdata http request file syntax
             files={
                 'file': (
                     data_from_publik["atal_attachment1"]["filename"],
@@ -230,6 +241,8 @@ class imio_atal(BaseResource):
             },
         )
 
+        # Return http request response text if there is an error
+        # or http response converted to json if there is not
         if response.raise_for_status():
             error_desc = {'message': response.text}
             raise APIError(
@@ -239,4 +252,4 @@ class imio_atal(BaseResource):
         else:
             response = response.json()
 
-        return {'data': response}
+        return {'data': response}  # must return dict

@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.3.7
+------------------
+
+- [TELE-927] add comments to models enpoints [dmu]
+  https://support.imio.be/browse/TELE-927
+
 0.3.6
 ------------------
 
