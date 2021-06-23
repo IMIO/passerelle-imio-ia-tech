@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.3.8
+------------------
+
+- [TELE-930] add endpoint to retrieve details of a work request [dmu]
+  https://support.imio.be/browse/TELE-930
+
 0.3.7
 ------------------
 

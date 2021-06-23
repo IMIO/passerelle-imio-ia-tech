@@ -195,7 +195,7 @@ class imio_atal(BaseResource):
 
     @endpoint(
         perm='can_access',
-        description=_('Post '),
+        description=_('Post files and join them to and ATAL work request.'),
         methods=['post'],
         parameters={
             "atal_work_request_uuid": {
@@ -238,6 +238,55 @@ class imio_atal(BaseResource):
                     image_for_atal,
                     data_from_publik["atal_attachment1"]["content_type"],
                 )
+            },
+        )
+
+        # Return http request response text if there is an error
+        # or http response converted to json if there is not
+        if response.raise_for_status():
+            error_desc = {'message': response.text}
+            raise APIError(
+                '{} (HTTP error {})'.format(response.text, response.status_code),
+                data=error_desc,
+            )
+        else:
+            response = response.json()
+
+        return {'data': response}  # must return dict
+
+    @endpoint(
+        perm='can_access',
+        description=_('Return work request details from ATAL.'),
+        methods=['post'],
+        parameters={
+            "atal_work_request_uuid": {
+                "description": "Numéro d'identification uuid de la demande dans ATAL.",
+                "type": "string",
+                "example_value": "11865d87-336b-49b3-e181-08d76f93d6b4",
+            },
+        },
+    )
+    def get_work_request_details(self, request, *args, **kwargs):
+        data_from_publik = json_loads(request.body)  # http data from wcs webservice
+
+        # ATAL 6 require uuid in the url as an endpoint
+        # for example :
+        # https://demov6.imio-app.be/api/WorksRequests/11865d87-336b-49b3-e181-08d76f93d6b4
+
+        work_request_uuid = data_from_publik["atal_work_request_uuid"]
+
+        response = self.requests.get(
+            urljoin(
+                self.base_url,
+                '/api/WorksRequests/'
+                # uuid is fetched from ATAL work request creation response in wcs vars
+                + data_from_publik["atal_work_request_uuid"],
+            ),
+            headers={
+                "accept": "application/json",
+                # X-API-KEY is visible in ATAL admin panel
+                # and set in the passerelle connector settings.
+                "X-API-Key": self.api_key,
             },
         )
 
