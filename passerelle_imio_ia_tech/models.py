@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import base64
+from io import BytesIO
 import requests
 
 from django.db import models
@@ -185,3 +187,56 @@ class imio_atal(BaseResource):
         """
         response_json = response.json()
         return {'data': response_json}
+
+    @endpoint(
+        perm='can_access',
+        description=_('Post '),
+        methods=['post'],
+        parameters={
+            "atal_work_request_uuid": {
+                "description": "Numéro d'identification uuid de la demande dans ATAL.",
+                "type": "string",
+                # "example_value": "11865d87-336b-49b3-e181-08d76f93d6b4",
+            },
+            "atal_attachment1": {
+                "description": "Fichier 1",
+            },
+        },
+    )
+    def post_attachment(self, request, *args, **kwargs):
+        data_from_publik = json_loads(request.body)
+
+        decoded_image = base64.b64decode(
+            data_from_publik["atal_attachment1"]["content"]
+        )
+        image_for_atal = BytesIO(decoded_image)
+
+        response = self.requests.post(
+            urljoin(
+                self.base_url,
+                '/api/WorksRequests/'
+                + data_from_publik["atal_work_request_uuid"]
+                + '/Attachments',
+            ),
+            headers={
+                "X-API-Key": self.api_key,
+            },
+            files={
+                'file': (
+                    data_from_publik["atal_attachment1"]["filename"],
+                    image_for_atal,
+                    data_from_publik["atal_attachment1"]["content_type"],
+                )
+            },
+        )
+
+        if response.raise_for_status():
+            error_desc = {'message': response.text}
+            raise APIError(
+                '{} (HTTP error {})'.format(response.text, response.status_code),
+                data=error_desc,
+            )
+        else:
+            response = response.json()
+
+        return {'data': response}

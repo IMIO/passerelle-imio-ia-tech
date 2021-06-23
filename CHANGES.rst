@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.3.6
+------------------
+
+- [TELE-927] add attachment post to ATAL endpoint [dmu]
+  https://support.imio.be/browse/TELE-927
+
+
 0.3.5
 ------------------
 
