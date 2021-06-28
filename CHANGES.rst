@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.3.9
+------------------
+
+- [TELE-933] add cleanWs() to fix workspace not cleaned [dmu] 
+  https://support.imio.be/browse/TELE-933
+
+
 0.3.8
 ------------------
 
