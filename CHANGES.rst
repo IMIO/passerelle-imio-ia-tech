@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.4.0
+------------------
+
+- [TELE-933] only clean on success [dmu] 
+  https://support.imio.be/browse/TELE-933
+
+
 0.3.9
 ------------------
 
