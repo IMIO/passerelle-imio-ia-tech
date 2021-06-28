@@ -46,9 +46,12 @@ pipeline {
         }
     }
     post {
+<<<<<<< HEAD
         always {
             sh "rm -f passerelle-imio-ia-tech_*.deb"
         }
+=======
+>>>>>>> 87a05fe12bec237a08239dc6d01808c6962c243b
         success {
             cleanWs()
         }
