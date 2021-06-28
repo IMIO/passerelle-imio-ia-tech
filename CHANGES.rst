@@ -1,6 +1,13 @@
 Changelog
 =========
 
+0.4.1
+------------------
+
+- [TELE-933] only clean on success [dmu] (2nd)
+  fix merge code commited by mistake
+  https://support.imio.be/browse/TELE-933
+
 0.4.0
 ------------------
 
