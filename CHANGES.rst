@@ -1,6 +1,14 @@
 Changelog
 =========
 
+0.4.3
+------------------
+
+- split fpm command on multiple line
+- build package with python3
+- do not set auto dependencies
+[nhi]
+
 0.4.2
 ------------------
 
