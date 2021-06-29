@@ -1,8 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
-
 from setuptools.command.install_lib import install_lib as _install_lib
 from setuptools import setup, find_packages
+import sys
+
+# because fpm include pyc files in production
+sys.dont_write_bytecode = True
 
 
 class install_lib(_install_lib):

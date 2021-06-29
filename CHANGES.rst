@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.2
+------------------
+
+- [TELE-933] add dont_write_bytecode (fpm include pyc files in production fix) [dmu]
+
+
 0.4.1
 ------------------
 
