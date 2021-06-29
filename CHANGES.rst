@@ -1,6 +1,12 @@
 Changelog
 =========
 
+0.4.4
+------------------
+
+- [TELE-913] pass requester contact info [dmu]
+
+
 0.4.3
 ------------------
 

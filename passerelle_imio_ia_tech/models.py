@@ -138,6 +138,16 @@ class imio_atal(BaseResource):
         data_from_publik = json_loads(request.body)  # http data from wcs webservice
         # commented parameters below are not required
         data_to_atal = {
+            "Contact": {
+                "FirstName": data_from_publik["atal_contact_firstname"],
+                "LastName": data_from_publik["atal_contact_lastname"],
+                "Email": data_from_publik["atal_contact_email"],
+                "Phone": data_from_publik["atal_contact_phone"],
+                "Mobile": data_from_publik["atal_contact_mobile"],
+                "Address1": data_from_publik["atal_contact_address"],
+                "ZipCode": data_from_publik["atal_contact_zipcode"],
+                "City": data_from_publik["atal_contact_city"],
+            },
             "RequesterId": data_from_publik["atal_requester_id"],
             # "Operator": data_from_publik["atal_operator"],
             "Object": data_from_publik["atal_object"],
