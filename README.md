@@ -21,9 +21,3 @@ Usage
  - test service by clicking on the available links
    - the /testConnection/ endpoint try to establish a connection with ATAL
    - the /test_createItem/ endpoint try to create a new point in ATAL
-
-
-
-Usage in w.c.s.
----------------
-

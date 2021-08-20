@@ -1,168 +1,81 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import base64
 from io import BytesIO
-import requests
 
+import requests
 from django.db import models
-from django.utils.translation import ugettext_lazy as _
+from django.http import JsonResponse
 from django.utils.six.moves.urllib_parse import urljoin
-from passerelle.compat import json_loads
 from passerelle.base.models import BaseResource
+from passerelle.compat import json_loads
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
 
 
+# TODO : we should rename this class name with something like AtalConnector
 class imio_atal(BaseResource):
     base_url = models.URLField(
         max_length=256,
         blank=False,
-        verbose_name=_("Base URL"),
-        help_text=_("API base URL"),
+        verbose_name="Base URL",
+        help_text="Base URL sans slash à la fin, comme ceci : https://example.net",
     )
-    api_key = models.CharField(max_length=128, verbose_name=_("API Key"))
-
-    category = _("Business Process Connectors")
+    api_key = models.CharField(
+        max_length=128,
+        verbose_name="API Key",
+    )
+    api_description = "Connecteur permettant d'intéragir avec une instance d'Atal V6"
+    category = "Connecteurs iMio"
 
     class Meta:
         verbose_name = "Connecteur Atal (iMio)"
 
-    @classmethod
-    def get_verbose_name(cls):
-        return cls._meta.verbose_name
-
-    @endpoint(perm='can_access', description=_('Test methods'))
-    def Test(self, request):
+    @endpoint(
+        perm="can_access",
+        description="Test methods",
+    )
+    def test(self, request):
         atal_response = requests.get(
-            url=self.base_url + "api/Test",
+            url=f"{self.base_url}/api/Test",
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
         )
-        atal_response_format = "{} - {}".format(
-            atal_response.status_code, atal_response.text
-        )
+        atal_response_format = "{} - {}".format(atal_response.status_code, atal_response.text)
         return atal_response_format
 
     @endpoint(
-        perm='can_access',
-        description=_('Post '),
-        methods=['post'],
-        parameters={
-            'atal_requester_id': {
-                'description': "Numéro de l'utilisateur demandeur dans ATAL",
-                'type': 'integer',
-            },
-            'atal_contact_firstname': {
-                'description': "Prénom du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            'atal_contact_lastname': {
-                'description': "Nom du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            'atal_contact_email': {
-                'description': "Adresse mail du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            'atal_contact_phone': {
-                'description': "Numéro de téléphone du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            'atal_contact_mobile': {
-                'description': "Numéro de mobile du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            'atal_contact_address': {
-                'description': "Adresse du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            'atal_contact_zipcode': {
-                'description': "Code postal du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            'atal_contact_city': {
-                'description': "Localité du contact transmis vers ATAL",
-                'type': 'string',
-            },
-            "atal_operator": {
-                'description': "Nom de l'opérateur",
-                'type': "string",
-            },
-            "atal_object": {
-                'description': "Objet de la demande",
-                'type': "string",
-            },
-            "atal_description": {
-                'description': "Description de la demande",
-                'type': "string",
-            },
-            "atal_desired_date": {
-                'description': "Date désirée pour la demande (ex: 2021-06-16T13:30:25.365Z)",
-                'type': "string",
-            },
-            "atal_recipient_id": {
-                'description': "Numéro identifiant du destinataire",
-                'type': "integer",
-            },
-            "atal_requesting_department_id": {
-                'description': "Numéro identifiant du département demandeur",
-                'type': "integer",
-            },
-            "atal_request_type": {
-                'description': "Numéro identifiant du type de requête",
-                'type': "integer",
-            },
-            "atal_request_date": {
-                'description': "Date de la requête",
-                'type': "string",
-            },
-            "atal_localization": {
-                'description': "Lieu de l'intervention",
-                'type': "string",
-            },
-            "atal_patrimony_id": {
-                'description': "Numéro identifiant du patrimoine",
-                'type': "integer",
-            },
-            "atal_longitude": {
-                'description': "Coordonée longitude du lieu de l'intervention",
-                'type': "integer",
-            },
-            "atal_latitude": {
-                'description': "Coordonée latitude du lieu de l'intervention",
-                'type': "integer",
-            },
-        },
+        perm="can_access",
+        description="Créer une demande de travaux dans Atal",
+        methods=["post"],
     )
-    def create_work_request(self, request, *args, **kwargs):
-        data_from_publik = json_loads(request.body)  # http data from wcs webservice
+    def create_work_request(self, request, post_data):
         # commented parameters below are not required
+        # TODO : use post_data.get('mavar', '') if MaVar is optionnal
         data_to_atal = {
             "Contact": {
-                "FirstName": data_from_publik["atal_contact_firstname"],
-                "LastName": data_from_publik["atal_contact_lastname"],
-                "Email": data_from_publik["atal_contact_email"],
-                "Phone": data_from_publik["atal_contact_phone"],
-                "Mobile": data_from_publik["atal_contact_mobile"],
-                "Address1": data_from_publik["atal_contact_address"],
-                "ZipCode": data_from_publik["atal_contact_zipcode"],
-                "City": data_from_publik["atal_contact_city"],
+                "FirstName": post_data["atal_contact_firstname"],
+                "LastName": post_data["atal_contact_lastname"],
+                "Email": post_data["atal_contact_email"],
+                "Phone": post_data["atal_contact_phone"],
+                "Mobile": post_data["atal_contact_mobile"],
+                "Address1": post_data["atal_contact_address"],
+                "ZipCode": post_data["atal_contact_zipcode"],
+                "City": post_data["atal_contact_city"],
             },
-            "RequesterId": data_from_publik["atal_requester_id"],
-            # "Operator": data_from_publik["atal_operator"],
-            "Object": data_from_publik["atal_object"],
-            "Description": data_from_publik["atal_description"],
-            # "DesiredDate": data_from_publik["atal_desired_date"],
-            "RecipientId": data_from_publik["atal_recipient_id"],
-            "RequestingDepartmentId": data_from_publik["atal_requesting_department_id"],
-            "RequestType": data_from_publik["atal_request_type"],
-            # "RequestDate": data_from_publik["atal_request_date"],
-            "Localization": data_from_publik["atal_localization"],
-            # "PatrimonyId": data_from_publik["atal_patrimony_id"],
-            "Longitude": data_from_publik["atal_longitude"],
-            "Latitude": data_from_publik["atal_latitude"],
+            "RequesterId": post_data["atal_requester_id"],
+            # "Operator": post_data["atal_operator"],
+            "Object": post_data["atal_object"],
+            "Description": post_data["atal_description"],
+            # "DesiredDate": post_data["atal_desired_date"],
+            "RecipientId": post_data["atal_recipient_id"],
+            "RequestingDepartmentId": post_data["atal_requesting_department_id"],
+            "RequestType": post_data["atal_request_type"],
+            # "RequestDate": post_data["atal_request_date"],
+            "Localization": post_data["atal_localization"],
+            # "PatrimonyId": post_data["atal_patrimony_id"],
+            "Longitude": post_data["atal_longitude"],
+            "Latitude": post_data["atal_latitude"],
         }
-        # Raw data that works locally with Postman or Python request
+        # Raw data that works locally with Postman or Python request on atal demo
+        # TODO : adapt and move them to schema
         """
         data_to_atal = {
             "RequesterId": 13,
@@ -177,10 +90,7 @@ class imio_atal(BaseResource):
         }
         """
         response = self.requests.post(
-            urljoin(
-                self.base_url,
-                '/api/WorksRequests',  # Endpoints are described in ATAl Swagger
-            ),
+            f"{self.base_url}/api/WorksRequests",  # Endpoints are described in ATAl Swagger
             json=data_to_atal,
             headers={
                 "accept": "application/json",
@@ -190,84 +100,64 @@ class imio_atal(BaseResource):
                 "Content-Type": "application/json",
             },
         )
-        # Error handling (WIP)
-        """
-        if response.raise_for_status():
-            error_desc = {'message': response.text}
-            raise APIError(
-                '{} (HTTP error {})'.format(response.text, response.status_code),
-                data=error_desc,
-            )
-        else:
-        """
-        response_json = response.json()
-        return {'data': response_json}
+
+        # TODO : create an utilitary method to handle status_code >= 400
+        if response.status_code >= 400:
+            data = {
+                "error": "Bad Gateway or Proxy error",
+                "message": f"Erreur Atal {response.status_code} {response.reason}",
+                "url": f"{self.base_url}",
+            }
+            return JsonResponse(data, status=502)
+
+        return {"data": response.json()}
 
     @endpoint(
-        perm='can_access',
-        description=_('Post files and join them to and ATAL work request.'),
-        methods=['post'],
-        parameters={
-            "atal_work_request_uuid": {
-                "description": "Numéro d'identification uuid de la demande dans ATAL.",
-                "type": "string",
-                # "example_value": "11865d87-336b-49b3-e181-08d76f93d6b4",
-            },
-            "atal_attachment1": {
-                "description": "Fichier 1",
-            },
-        },
+        perm="can_access",
+        description="Post files and join them to and ATAL work request.",
+        methods=["post"],
+        parameters={},
     )
-    def post_attachment(self, request, *args, **kwargs):
-        data_from_publik = json_loads(request.body)  # http data from wcs webservice
-
+    def post_attachment(self, request, post_data):
         # ATAL 6 require a multipart/formdata request
         # with a bytes encoded file. That's why we use
         # BytesIO here to convert Base64 image from wcs to bytes
-        decoded_image = base64.b64decode(
-            data_from_publik["atal_attachment1"]["content"]
-        )
+        decoded_image = base64.b64decode(post_data["atal_attachment1"]["content"])
         image_for_atal = BytesIO(decoded_image)
-
+        # uuid is fetched from ATAL work request creation response in wcs vars
+        work_request_uuid = post_data["atal_work_request_uuid"]
+        # X-API-KEY is visible in ATAL admin panel
+        # and set in the passerelle connector settings.
+        headers = {
+            "X-API-Key": self.api_key,
+        }
+        # This is multipart/formdata http request file syntax
+        files = {
+            "file": (
+                post_data["atal_attachment1"]["filename"],
+                image_for_atal,
+                post_data["atal_attachment1"]["content_type"],
+            )
+        }
         response = self.requests.post(
-            urljoin(
-                self.base_url,
-                '/api/WorksRequests/'
-                # uuid is fetched from ATAL work request creation response in wcs vars
-                + data_from_publik["atal_work_request_uuid"] + '/Attachments',
-            ),
-            headers={
-                # X-API-KEY is visible in ATAL admin panel
-                # and set in the passerelle connector settings.
-                "X-API-Key": self.api_key,
-            },
-            # This is multipart/formdata http request file syntax
-            files={
-                'file': (
-                    data_from_publik["atal_attachment1"]["filename"],
-                    image_for_atal,
-                    data_from_publik["atal_attachment1"]["content_type"],
-                )
-            },
+            f"{self.base_url}/api/WorksRequests/{work_request_uuid}/Attachments", headers=headers, files=files
         )
 
-        # Return http request response text if there is an error
-        # or http response converted to json if there is not
-        if response.raise_for_status():
-            error_desc = {'message': response.text}
-            raise APIError(
-                '{} (HTTP error {})'.format(response.text, response.status_code),
-                data=error_desc,
-            )
-        else:
-            response = response.json()
+        # TODO : create an utilitary method to handle status_code >= 400
+        if response.status_code >= 400:
+            data = {
+                "error": "Bad Gateway or Proxy error",
+                "message": f"Erreur Atal {response.status_code} {response.reason}",
+                "url": f"{self.base_url}",
+            }
+            return JsonResponse(data, status=502)
 
-        return {'data': response}  # must return dict
+        return {"data": response}  # must return dict
 
     @endpoint(
-        perm='can_access',
-        description=_('Return work request details from ATAL.'),
-        methods=['post'],
+        perm="can_access",
+        description="Return work request details from ATAL.",
+        methods=["post"],
         parameters={
             "atal_work_request_uuid": {
                 "description": "Numéro d'identification uuid de la demande dans ATAL.",
@@ -277,38 +167,58 @@ class imio_atal(BaseResource):
         },
     )
     def get_work_request_details(self, request, *args, **kwargs):
-        data_from_publik = json_loads(request.body)  # http data from wcs webservice
+        post_data = json_loads(request.body)  # http data from wcs webservice
 
         # ATAL 6 require uuid in the url as an endpoint
         # for example :
         # https://demov6.imio-app.be/api/WorksRequests/11865d87-336b-49b3-e181-08d76f93d6b4
+        uuid = post_data["atal_work_request_uuid"]
+        url = f"{self.base_url}/api/WorksRequests/{uuid}"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+        response = self.requests.get(url, headers=headers)
 
-        work_request_uuid = data_from_publik["atal_work_request_uuid"]
+        # TODO : create an utilitary method to handle status_code >= 400
+        if response.status_code >= 400:
+            data = {
+                "error": "Bad Gateway or Proxy error",
+                "message": f"Erreur Atal {response.status_code} {response.reason}",
+                "url": f"{self.base_url}",
+            }
+            return JsonResponse(data, status=502)
 
-        response = self.requests.get(
-            urljoin(
-                self.base_url,
-                '/api/WorksRequests/'
-                # uuid is fetched from ATAL work request creation response in wcs vars
-                + data_from_publik["atal_work_request_uuid"],
-            ),
-            headers={
-                "accept": "application/json",
-                # X-API-KEY is visible in ATAL admin panel
-                # and set in the passerelle connector settings.
-                "X-API-Key": self.api_key,
+        return {"data": response}  # must return dict
+
+    @endpoint(
+        name="work-request-details",
+        perm="can_access",
+        description="Return work request details from ATAL.",
+        methods=["get"],
+        pattern=r"^(?P<uuid>[\w-]+)/$",
+        example_pattern="{uuid}/",
+        parameters={
+            "uuid": {
+                "description": "Numéro d'identification uuid de la demande dans ATAL.",
+                "type": "string",
+                "example_value": "11865d87-336b-49b3-e181-08d76f93d6b4",
             },
+        },
+    )
+    def read_work_request_details(self, request, uuid):
+        url = f"{self.base_url}/api/WorksRequests/{uuid}"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+        response = self.requests.get(
+            url,
+            headers=headers,
         )
 
-        # Return http request response text if there is an error
-        # or http response converted to json if there is not
-        if response.raise_for_status():
-            error_desc = {'message': response.text}
-            raise APIError(
-                '{} (HTTP error {})'.format(response.text, response.status_code),
-                data=error_desc,
-            )
-        else:
-            response = response.json()
-
-        return {'data': response}  # must return dict
+        return {"data": response}  # must return dict

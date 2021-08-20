@@ -8,8 +8,7 @@ repos:
         args:
           [
             "--target-version",
-            "py38",
-            "--skip-string-normalization",
+            "py37",
             "--line-length",
-            "88",
+            "120",
           ]

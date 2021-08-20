@@ -1,28 +1,24 @@
-#! /usr/bin/env python
-# -*- coding: utf-8 -*-
-from setuptools.command.install_lib import install_lib as _install_lib
-from setuptools import setup, find_packages
 import sys
 
-# because fpm include pyc files in production
-sys.dont_write_bytecode = True
+from setuptools import find_packages
+from setuptools import setup
 
-
-class install_lib(_install_lib):
-    def run(self):
-        _install_lib.run(self)
-
+version = "1.0"
 
 setup(
     name='passerelle-imio-ia-tech',
-    author='Christophe Boulanger',
-    author_email='christophe.boulanger@imio.be',
+    version=version,
+    author='iA.Téléservices',
+    author_email='support-ts@imio.be',
     url='https://github.com/IMIO/passerelle-imio-ia_tech',
     packages=find_packages(),
-    install_requires=[
-        'django>=1.11',
+    classifiers=[
+        "Environment :: Web Environment",
+        "Programming Language :: Python",
+        "Programming Language :: Python :: 3.7",
     ],
-    cmdclass={
-        'install_lib': install_lib,
-    },
+    install_requires=[
+        "django>=2.2",
+    ],
+    zip_safe=False,
 )
