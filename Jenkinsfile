@@ -4,11 +4,11 @@ pipeline {
         // Keep the 50 most recent builds
         buildDiscarder(logRotator(numToKeepStr:'50'))
     }
+    environment {
+       VERSION= sh (script: "sh version.sh", returnStdout: true) 
+    }
     stages {
         stage('Build') {
-            environment {
-                VERSION= sh (script: "sh version.sh", returnStdout: true)
-            }
             steps {
                 sh "fpm -a amd64 \
                 --python-bin python3 \
@@ -17,7 +17,7 @@ pipeline {
                 -n passerelle-imio-ia-tech \
                 -s python \
                 -t deb \
-                -v `echo ${VERSION}` \
+                -v `echo ${env.VERSION}` \
                 --python-install-lib /usr/lib/python3/dist-packages \
                 --no-auto-depends \
                 -d passerelle setup.py"
@@ -30,12 +30,9 @@ pipeline {
             when {
                 branch 'master'
             }
-            environment {
-                VERSION= sh (script: "sh version.sh", returnStdout: true)
-            }
             steps {
                 withCredentials([usernameColonPassword(credentialsId: 'nexus-teleservices', variable: 'CREDENTIALS'),string(credentialsId: 'nexus-url-buster', variable:'NEXUS_URL_BUSTER')]) {
-                    sh ('curl -v --fail -u $CREDENTIALS -X POST -H Content-Type:multipart/form-data --data-binary @passerelle-imio-ia-tech_`echo ${VERSION}`_amd64.deb $NEXUS_URL_BUSTER')
+                    sh ('curl -v --fail -u $CREDENTIALS -X POST -H Content-Type:multipart/form-data --data-binary @passerelle-imio-ia-tech_`echo ${env.VERSION}`_amd64.deb $NEXUS_URL_BUSTER')
                 }
             }
         }
@@ -45,13 +42,10 @@ pipeline {
                     branch 'master'
                 }
             }
-            environment {
-                VERSION= sh (script: "sh version.sh", returnStdout: true)
-            }
             steps {
                 sh "ls -lah"
                 withCredentials([usernameColonPassword(credentialsId: 'nexus-teleservices', variable: 'CREDENTIALS'),string(credentialsId: 'nexus-url-buster-test', variable:'NEXUS_URL_BUSTER')]) {
-                    sh ('curl -v --fail -u $CREDENTIALS -X POST -H Content-Type:multipart/form-data --data-binary @passerelle-imio-ia-tech_`echo ${VERSION}`_amd64.deb $NEXUS_URL_BUSTER')
+                    sh ('curl -v --fail -u $CREDENTIALS -X POST -H Content-Type:multipart/form-data --data-binary @passerelle-imio-ia-tech_`echo ${env.VERSION}`_amd64.deb $NEXUS_URL_BUSTER')
                 }
             }
         }
