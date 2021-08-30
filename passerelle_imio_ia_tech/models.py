@@ -46,7 +46,8 @@ class imio_atal(BaseResource):
         description="Créer une demande de travaux dans Atal",
         methods=["post"],
     )
-    def create_work_request(self, request, post_data):
+    def create_work_request(self, request):
+        post_data = json_loads(request.body)
         # commented parameters below are not required
         # TODO : use post_data.get('mavar', '') if MaVar is optionnal
         data_to_atal = {
@@ -118,7 +119,8 @@ class imio_atal(BaseResource):
         methods=["post"],
         parameters={},
     )
-    def post_attachment(self, request, post_data):
+    def post_attachment(self, request):
+        post_data = json_loads(request.body)
         # ATAL 6 require a multipart/formdata request
         # with a bytes encoded file. That's why we use
         # BytesIO here to convert Base64 image from wcs to bytes
@@ -152,7 +154,7 @@ class imio_atal(BaseResource):
             }
             return JsonResponse(data, status=502)
 
-        return {"data": response}  # must return dict
+        return {"data": response.json()}  # must return dict
 
     @endpoint(
         perm="can_access",
@@ -191,7 +193,7 @@ class imio_atal(BaseResource):
             }
             return JsonResponse(data, status=502)
 
-        return {"data": response}  # must return dict
+        return {"data": response.json()}  # must return dict
 
     @endpoint(
         name="work-request-details",
@@ -221,4 +223,4 @@ class imio_atal(BaseResource):
             headers=headers,
         )
 
-        return {"data": response}  # must return dict
+        return {"data": response.json()}  # must return dict
