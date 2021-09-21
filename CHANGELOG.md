@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.3] - 2021-09-21
+### Fixed
+- [MTELEECAA-10] fix missing parameter post_data and Response not json
+- I incremented again because that does not appear in production.
+
 ## [1.0.2] - 2021-08-30
 ### Fixed
 - [MTELEECAA-10] fix missing parameter post_data and Response not json
