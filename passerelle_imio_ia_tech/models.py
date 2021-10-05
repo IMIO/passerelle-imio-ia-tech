@@ -37,8 +37,10 @@ class imio_atal(BaseResource):
         atal_response = requests.get(
             url=f"{self.base_url}/api/Test",
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
+            verify=False,
         )
-        atal_response_format = "{} - {}".format(atal_response.status_code, atal_response.text)
+        atal_response_format = "{} - {}".format(
+            atal_response.status_code, atal_response.text)
         return atal_response_format
 
     @endpoint(
@@ -91,7 +93,8 @@ class imio_atal(BaseResource):
         }
         """
         response = self.requests.post(
-            f"{self.base_url}/api/WorksRequests",  # Endpoints are described in ATAl Swagger
+            # Endpoints are described in ATAl Swagger
+            f"{self.base_url}/api/WorksRequests",
             json=data_to_atal,
             headers={
                 "accept": "application/json",
@@ -100,6 +103,7 @@ class imio_atal(BaseResource):
                 "X-API-Key": self.api_key,
                 "Content-Type": "application/json",
             },
+            verify=False,
         )
 
         # TODO : create an utilitary method to handle status_code >= 400
@@ -124,7 +128,8 @@ class imio_atal(BaseResource):
         # ATAL 6 require a multipart/formdata request
         # with a bytes encoded file. That's why we use
         # BytesIO here to convert Base64 image from wcs to bytes
-        decoded_image = base64.b64decode(post_data["atal_attachment1"]["content"])
+        decoded_image = base64.b64decode(
+            post_data["atal_attachment1"]["content"])
         image_for_atal = BytesIO(decoded_image)
         # uuid is fetched from ATAL work request creation response in wcs vars
         work_request_uuid = post_data["atal_work_request_uuid"]
@@ -142,7 +147,10 @@ class imio_atal(BaseResource):
             )
         }
         response = self.requests.post(
-            f"{self.base_url}/api/WorksRequests/{work_request_uuid}/Attachments", headers=headers, files=files
+            f"{self.base_url}/api/WorksRequests/{work_request_uuid}/Attachments",
+            headers=headers,
+            files=files,
+            verify=False,
         )
 
         # TODO : create an utilitary method to handle status_code >= 400
@@ -153,7 +161,6 @@ class imio_atal(BaseResource):
                 "url": f"{self.base_url}",
             }
             return JsonResponse(data, status=502)
-
         return {"data": response.json()}  # must return dict
 
     @endpoint(
@@ -182,7 +189,7 @@ class imio_atal(BaseResource):
             # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
-        response = self.requests.get(url, headers=headers)
+        response = self.requests.get(url, headers=headers, verify=False,)
 
         # TODO : create an utilitary method to handle status_code >= 400
         if response.status_code >= 400:
@@ -221,6 +228,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
 
         return {"data": response.json()}  # must return dict
