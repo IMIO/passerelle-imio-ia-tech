@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.0.5] - 2021-09-22
+### Fixed
+- [DSO-19] [TELE-1117] add verify=False to avoid SSL problems  
+
 ## [1.0.4] - 2021-09-22
 ### Changed
 - [INFRA-3976] change package name char to use the standards "-" and "~" as separator
