@@ -110,7 +110,7 @@ class imio_atal(BaseResource):
         if response.status_code >= 400:
             data = {
                 "error": "Bad Gateway or Proxy error",
-                "message": f"Erreur Atal {response.status_code} {response.reason}",
+                "message": f"Erreur Atal {response.status_code} {response.reason} {response.text}",
                 "url": f"{self.base_url}",
             }
             return JsonResponse(data, status=502)
@@ -157,7 +157,7 @@ class imio_atal(BaseResource):
         if response.status_code >= 400:
             data = {
                 "error": "Bad Gateway or Proxy error",
-                "message": f"Erreur Atal {response.status_code} {response.reason}",
+                "message": f"Erreur Atal {response.status_code} {response.reason} {response.text}",
                 "url": f"{self.base_url}",
             }
             return JsonResponse(data, status=502)
@@ -195,7 +195,7 @@ class imio_atal(BaseResource):
         if response.status_code >= 400:
             data = {
                 "error": "Bad Gateway or Proxy error",
-                "message": f"Erreur Atal {response.status_code} {response.reason}",
+                "message": f"Erreur Atal {response.status_code} {response.reason} {response.text}",
                 "url": f"{self.base_url}",
             }
             return JsonResponse(data, status=502)
