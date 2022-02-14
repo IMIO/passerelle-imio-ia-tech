@@ -4,6 +4,7 @@ from io import BytesIO
 import requests
 from django.db import models
 from django.http import JsonResponse
+
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
 from passerelle.compat import json_loads
@@ -56,9 +57,21 @@ class imio_atal(BaseResource):
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
             verify=False,
         )
-        atal_response_format = "{} - {}".format(
-            atal_response.status_code, atal_response.text)
+        atal_response_format = "{} - {}".format(atal_response.status_code, atal_response.text)
         return atal_response_format
+
+    @endpoint(
+        name="third-parties",
+        perm="can_access",
+        description="Récupère les third parties, utile pour sélectionner parmi eux le bon service demandeur",
+    )
+    def third_parties(self, request):
+        response = requests.get(
+            url=f"{self.base_url}/api/ThirdParties?type=2",
+            headers={"Accept": "application/json", "X-API-Key": self.api_key},
+            verify=False,
+        ).json()
+        return response
 
     @endpoint(
         perm="can_access",
@@ -145,8 +158,7 @@ class imio_atal(BaseResource):
         # ATAL 6 require a multipart/formdata request
         # with a bytes encoded file. That's why we use
         # BytesIO here to convert Base64 image from wcs to bytes
-        decoded_image = base64.b64decode(
-            post_data["atal_attachment1"]["content"])
+        decoded_image = base64.b64decode(post_data["atal_attachment1"]["content"])
         image_for_atal = BytesIO(decoded_image)
         # uuid is fetched from ATAL work request creation response in wcs vars
         work_request_uuid = post_data["atal_work_request_uuid"]
@@ -206,7 +218,11 @@ class imio_atal(BaseResource):
             # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
-        response = self.requests.get(url, headers=headers, verify=False, )
+        response = self.requests.get(
+            url,
+            headers=headers,
+            verify=False,
+        )
 
         # TODO : create an utilitary method to handle status_code >= 400
         if response.status_code >= 400:
@@ -543,8 +559,9 @@ class imio_atal(BaseResource):
     )
     def read_rooms_dispo(self, request, date_debut, date_fin, heure_debut, heure_fin):
         # format date
-        date_debut = datetime.date(int(date_debut.split("-")[0]), int(date_debut.split("-")[1]),
-                                   int(date_debut.split("-")[2]))
+        date_debut = datetime.date(
+            int(date_debut.split("-")[0]), int(date_debut.split("-")[1]), int(date_debut.split("-")[2])
+        )
         date_fin = datetime.date(int(date_fin.split("-")[0]), int(date_fin.split("-")[1]), int(date_fin.split("-")[2]))
         # format heure
         heure_debut = time.strptime(heure_debut, "%H:%M")
@@ -593,7 +610,7 @@ class imio_atal(BaseResource):
             "delai": {
                 "description": "délai minimum à l'introduction de la demande",
                 "type": "int",
-                "example_value": 90
+                "example_value": 90,
             },
         },
     )
@@ -609,8 +626,13 @@ class imio_atal(BaseResource):
         # room = ast.literal_eval(room)
 
         # tri des locations par rapport à une salle
-        locations = [x for x in locations if "RoomId" in x and x["RoomId"] == int(room) and (
-                    today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])]
+        locations = [
+            x
+            for x in locations
+            if "RoomId" in x
+            and x["RoomId"] == int(room)
+            and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
+        ]
 
         return {"data": locations}
 
@@ -660,9 +682,20 @@ class imio_atal(BaseResource):
                 "type": "int",
                 "example_value": 63,
             },
-        }
+        },
     )
-    def write_reservation_room(self, request, date_debut, date_fin, heure_debut, heure_fin, room, nombre_personne_prevue=0, nombre_personne_reel=0, id_tier=63):
+    def write_reservation_room(
+        self,
+        request,
+        date_debut,
+        date_fin,
+        heure_debut,
+        heure_fin,
+        room,
+        nombre_personne_prevue=0,
+        nombre_personne_reel=0,
+        id_tier=63,
+    ):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
             "accept": "application/json",
@@ -676,28 +709,29 @@ class imio_atal(BaseResource):
         datetime_fin = f"{date_fin}T{heure_fin}"
         # room = ast.literal_eval(room)
 
-        payload = json.dumps({
-            "EndDate": datetime_fin,
-            "PlannedPeopleNumber": nombre_personne_prevue,
-            "RealPeopleNumber": nombre_personne_reel,
-            "RequesterThirdPartyId": id_tier,
-            "Rooms": [
-                {
-                    "EndDate": datetime_fin,
-                    "Pricing": {
-                        "AdditionalQuantity": 0,
-                        "AppliedPricingId": 0,
-                        "BaseQuantity": 0,
-                        "SquareMetersNumber": 0
-                    },
-                    "RoomId": room,
-                    "StartDate": datetime_debut
-                }
-            ],
-            "StartDate": datetime_debut
-        })
+        payload = json.dumps(
+            {
+                "EndDate": datetime_fin,
+                "PlannedPeopleNumber": nombre_personne_prevue,
+                "RealPeopleNumber": nombre_personne_reel,
+                "RequesterThirdPartyId": id_tier,
+                "Rooms": [
+                    {
+                        "EndDate": datetime_fin,
+                        "Pricing": {
+                            "AdditionalQuantity": 0,
+                            "AppliedPricingId": 0,
+                            "BaseQuantity": 0,
+                            "SquareMetersNumber": 0,
+                        },
+                        "RoomId": room,
+                        "StartDate": datetime_debut,
+                    }
+                ],
+                "StartDate": datetime_debut,
+            }
+        )
 
         response = self.requests.post(url, headers=headers, data=payload)
 
         return response.json()
-
