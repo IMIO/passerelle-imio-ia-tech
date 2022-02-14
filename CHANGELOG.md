@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.0.10] - 2022-02-14
 ### Added
 - [TOWS-98] get thirdparties from atal [nhi]
+- Black [nhi]
 - [MTELECHAA-68] add connecteur for location rooms et materials [nse]
 
 ## [1.0.9] - 2021-10-29

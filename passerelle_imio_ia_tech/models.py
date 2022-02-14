@@ -70,8 +70,8 @@ class imio_atal(BaseResource):
             url=f"{self.base_url}/api/ThirdParties?type=2",
             headers={"Accept": "application/json", "X-API-Key": self.api_key},
             verify=False,
-        ).json()
-        return response
+        )
+        return {"data": response.json()}
 
     @endpoint(
         perm="can_access",
