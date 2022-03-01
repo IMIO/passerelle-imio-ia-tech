@@ -1,4 +1,8 @@
+import ast
 import base64
+import datetime
+import json
+import time
 from io import BytesIO
 
 import requests
@@ -10,11 +14,6 @@ from passerelle.base.models import BaseResource
 from passerelle.compat import json_loads
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
-
-import datetime
-import time
-import json
-import ast
 
 
 # TODO : we should rename this class name with something like AtalConnector
