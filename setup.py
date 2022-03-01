@@ -3,7 +3,7 @@ import sys
 from setuptools import find_packages
 from setuptools import setup
 
-version = "1.0.10"
+version = "1.0.11"
 
 setup(
     name="passerelle-imio-ia-tech",
