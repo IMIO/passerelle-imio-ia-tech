@@ -34,12 +34,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.0.5] - 2021-09-22
 ### Fixed
-- [DSO-19] [TELE-1117] add verify=False to avoid SSL problems  
+- [DSO-19] [TELE-1117] add verify=False to avoid SSL problems
 
 ## [1.0.4] - 2021-09-22
 ### Changed
 - [INFRA-3976] change package name char to use the standards "-" and "~" as separator
-The usage of "." caused problems (recent version where not seen as the most recent by apt (see deb-version man page). 
+The usage of "." caused problems (recent version where not seen as the most recent by apt (see deb-version man page).
 
 ## [1.0.3] - 2021-09-21
 ### Fixed
@@ -80,9 +80,9 @@ The usage of "." caused problems (recent version where not seen as the most rece
 - [TELE-933] only clean on success [dmshd] (2nd)
   fix merge code commited by mistake
   https://support.imio.be/browse/TELE-933
-- [TELE-933] only clean on success [dmshd] 
+- [TELE-933] only clean on success [dmshd]
   https://support.imio.be/browse/TELE-933
-- [TELE-933] add cleanWs() to fix workspace not cleaned [dmshd] 
+- [TELE-933] add cleanWs() to fix workspace not cleaned [dmshd]
   https://support.imio.be/browse/TELE-933
 - [TELE-930] add endpoint to retrieve details of a work request [dmshd]
   https://support.imio.be/browse/TELE-930
