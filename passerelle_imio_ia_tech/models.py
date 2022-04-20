@@ -612,8 +612,8 @@ class imio_atal(BaseResource):
             x
             for x in locations
             if "RoomId" in x
-            and x["RoomId"] == int(room)
-            and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
+               and x["RoomId"] == int(room)
+               and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
         ]
 
         return {"data": locations}
@@ -667,16 +667,16 @@ class imio_atal(BaseResource):
         },
     )
     def write_reservation_room(
-        self,
-        request,
-        date_debut,
-        date_fin,
-        heure_debut,
-        heure_fin,
-        room,
-        nombre_personne_prevue=0,
-        nombre_personne_reel=0,
-        id_tier=63,
+            self,
+            request,
+            date_debut,
+            date_fin,
+            heure_debut,
+            heure_fin,
+            room,
+            nombre_personne_prevue=0,
+            nombre_personne_reel=0,
+            id_tier=63,
     ):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
@@ -717,3 +717,42 @@ class imio_atal(BaseResource):
         response = self.requests.post(url, headers=headers, data=payload)
 
         return response.json()
+
+    @endpoint(
+        name="get-loanable-items",
+        perm="can_access",
+        description="Item louable",
+        methods=["get"],
+    )
+    def get_loanable_items(self, request):
+        url = f"{self.base_url}/api/InventoriedItems"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+
+        try:
+            response = self.requests.get(
+                url,
+                headers=headers,
+            ).json()
+        except Exception as e:
+            raise APIError(
+                str(e),
+                http_status=405,
+            )
+
+        response = [
+            x
+            for x in response
+            if x["Item"]["ItemTemplate"]["Loanable"]
+        ]
+
+        loanable_items = []
+        for i in response:
+            if i["ItemId"] not in [x["ItemId"] for x in loanable_items]:
+                loanable_items.append(i)
+
+        return {"datas": loanable_items}
