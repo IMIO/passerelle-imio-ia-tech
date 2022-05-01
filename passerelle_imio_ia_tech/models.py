@@ -9,7 +9,6 @@ from django.db import models
 from django.http import JsonResponse
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
-from passerelle.compat import json_loads
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
 
@@ -76,7 +75,7 @@ class imio_atal(BaseResource):
         methods=["post"],
     )
     def create_work_request(self, request):
-        post_data = json_loads(request.body)
+        post_data = json.loads(request.body)
         # commented parameters below are not required
         # TODO : use post_data.get('mavar', '') if MaVar is optionnal
         data_to_atal = {
@@ -142,7 +141,7 @@ class imio_atal(BaseResource):
         parameters={},
     )
     def post_attachment(self, request):
-        post_data = json_loads(request.body)
+        post_data = json.loads(request.body)
         # ATAL 6 require a multipart/formdata request
         # with a bytes encoded file. That's why we use
         # BytesIO here to convert Base64 image from wcs to bytes
@@ -185,7 +184,7 @@ class imio_atal(BaseResource):
         },
     )
     def get_work_request_details(self, request, *args, **kwargs):
-        post_data = json_loads(request.body)  # http data from wcs webservice
+        post_data = json.loads(request.body)  # http data from wcs webservice
 
         # ATAL 6 require uuid in the url as an endpoint
         # for example :
