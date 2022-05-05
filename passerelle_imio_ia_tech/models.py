@@ -1,4 +1,3 @@
-import ast
 import base64
 import datetime
 import json
@@ -8,10 +7,8 @@ from io import BytesIO
 import requests
 from django.db import models
 from django.http import JsonResponse
-
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
-from passerelle.compat import json_loads
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
 
@@ -78,7 +75,7 @@ class imio_atal(BaseResource):
         methods=["post"],
     )
     def create_work_request(self, request):
-        post_data = json_loads(request.body)
+        post_data = json.loads(request.body)
         # commented parameters below are not required
         # TODO : use post_data.get('mavar', '') if MaVar is optionnal
         data_to_atal = {
@@ -144,7 +141,7 @@ class imio_atal(BaseResource):
         parameters={},
     )
     def post_attachment(self, request):
-        post_data = json_loads(request.body)
+        post_data = json.loads(request.body)
         # ATAL 6 require a multipart/formdata request
         # with a bytes encoded file. That's why we use
         # BytesIO here to convert Base64 image from wcs to bytes
@@ -187,7 +184,7 @@ class imio_atal(BaseResource):
         },
     )
     def get_work_request_details(self, request, *args, **kwargs):
-        post_data = json_loads(request.body)  # http data from wcs webservice
+        post_data = json.loads(request.body)  # http data from wcs webservice
 
         # ATAL 6 require uuid in the url as an endpoint
         # for example :
@@ -618,8 +615,8 @@ class imio_atal(BaseResource):
             x
             for x in locations
             if "RoomId" in x
-            and x["RoomId"] == int(room)
-            and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
+               and x["RoomId"] == int(room)
+               and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
         ]
 
         return {"data": locations}
@@ -673,16 +670,16 @@ class imio_atal(BaseResource):
         },
     )
     def write_reservation_room(
-        self,
-        request,
-        date_debut,
-        date_fin,
-        heure_debut,
-        heure_fin,
-        room,
-        nombre_personne_prevue=0,
-        nombre_personne_reel=0,
-        id_tier=63,
+            self,
+            request,
+            date_debut,
+            date_fin,
+            heure_debut,
+            heure_fin,
+            room,
+            nombre_personne_prevue=0,
+            nombre_personne_reel=0,
+            id_tier=63,
     ):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
@@ -714,6 +711,131 @@ class imio_atal(BaseResource):
                         },
                         "RoomId": room,
                         "StartDate": datetime_debut,
+                    }
+                ],
+                "StartDate": datetime_debut,
+            }
+        )
+
+        response = self.requests.post(url, headers=headers, data=payload)
+
+        return response.json()
+
+    @endpoint(
+        name="get-loanable-items",
+        perm="can_access",
+        description="Item louable",
+        methods=["get"],
+    )
+    def get_loanable_items(self, request):
+        url = f"{self.base_url}/api/InventoriedItems"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+
+        try:
+            response = self.requests.get(
+                url,
+                headers=headers,
+            ).json()
+        except Exception as e:
+            raise APIError(
+                str(e),
+                http_status=405,
+            )
+
+        response = [
+            x
+            for x in response
+            if x["Item"]["ItemTemplate"]["Loanable"]
+        ]
+
+        loanable_items = []
+        for i in response:
+            if i["ItemId"] not in [x["ItemId"] for x in loanable_items]:
+                loanable_items.append(i)
+
+        return {"datas": loanable_items}
+
+    @endpoint(
+        name="post-reservation-materiel",
+        perm="can_access",
+        description="Inscrit une réservation de matériel dans Atal.",
+        methods=["get"],
+        parameters={
+            "date_debut": {
+                "description": "date de debut de la location",
+                "type": "datetime.date",
+                "example_value": "2022-12-01",
+            },
+            "date_fin": {
+                "description": "date de fin de la location",
+                "type": "datetime.date",
+                "example_value": "2022-12-02",
+            },
+            "heure_debut": {
+                "description": "date de fin de la location",
+                "type": "datetime.time",
+                "example_value": "11:15",
+            },
+            "heure_fin": {
+                "description": "date de fin de la location",
+                "type": "datetime.time",
+                "example_value": "20:20",
+            },
+            "material": {
+                "description": "matériel",
+                "type": "int",
+                "example_value": 3258,
+            },
+            "quantity": {
+                "description": "Quantité demandée",
+                "type": "int",
+                "example_value": 0,
+            },
+            "id_tier": {
+                "description": "Aucune idée",
+                "type": "int",
+                "example_value": 63,
+            },
+        },
+    )
+    def post_material_location(
+            self,
+            request,
+            date_debut,
+            date_fin,
+            heure_debut,
+            heure_fin,
+            material,
+            quantity,
+            id_tier):
+
+        url = f"{self.base_url}/api/MaterialLoans"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+            "Content-Type": "application/json",
+        }
+
+        datetime_debut = f"{date_debut}T{heure_debut}Z"
+        datetime_fin = f"{date_fin}T{heure_fin}Z"
+
+        payload = json.dumps(
+            {
+                "EndDate": datetime_fin,
+                "RequesterThirdPartyId": id_tier,
+                "Material": [
+                    {
+                        "EndDate": datetime_fin,
+                        "ItemId": material,
+                        "StartDate": datetime_debut,
+                        "RequestedQuantity": quantity,
                     }
                 ],
                 "StartDate": datetime_debut,
