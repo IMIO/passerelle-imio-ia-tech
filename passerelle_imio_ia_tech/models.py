@@ -200,8 +200,14 @@ class imio_atal(BaseResource):
             # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
+
+        params = {
+            '$expand': 'Responses',
+        }
+
         response = self.requests.get(
             url,
+            params=params,
             headers=headers,
             verify=False,
         )
