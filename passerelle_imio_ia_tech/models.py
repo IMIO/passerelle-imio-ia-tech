@@ -7,6 +7,7 @@ from io import BytesIO
 import requests
 from django.db import models
 from django.http import JsonResponse
+
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
 from passerelle.utils.api import endpoint
