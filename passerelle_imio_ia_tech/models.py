@@ -210,15 +210,6 @@ class imio_atal(BaseResource):
             verify=False,
         )
 
-        # TODO : create an utilitary method to handle status_code >= 400
-        if response.status_code >= 400:
-            data = {
-                "error": "Bad Gateway or Proxy error",
-                "message": f"Erreur Atal {response.status_code} {response.reason} {response.text}",
-                "url": f"{self.base_url}",
-            }
-            return JsonResponse(data, status=502)
-
         return {"data": response.json()}  # must return dict
 
     @endpoint(
