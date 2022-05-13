@@ -210,7 +210,18 @@ class imio_atal(BaseResource):
             verify=False,
         )
 
-        return {"data": response.json()}  # must return dict
+        response_json = response.json()
+
+        # Make it work anyway when Atal isn't up to date (if Responses expand does not work)
+        if response_json.get('detail') and 'Responses' in response_json.get('detail'):
+            response = self.requests.get(
+                url,
+                headers=headers,
+                verify=False
+            )
+            response_json = response.json()
+
+        return {"data": response_json}  # must return dict
 
     @endpoint(
         name="work-request-details",
