@@ -44,6 +44,14 @@ class imio_atal(BaseResource):
     class Meta:
         verbose_name = "Connecteur Atal (iMio)"
 
+    def check_status(self):
+        response = requests.get(
+            url=f"{self.base_url}/api/Test",
+            headers={"Accept": "text/plain", "X-API-Key": self.api_key},
+            verify=False,
+        )
+        response.raise_for_status()
+
     @endpoint(
         perm="can_access",
         description="Test methods",
