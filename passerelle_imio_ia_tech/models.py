@@ -68,7 +68,9 @@ class imio_atal(BaseResource):
             headers={"Accept": "application/json", "X-API-Key": self.api_key},
             verify=False,
         )
-        return {"data": response.json()}
+        r_json = response.json()
+        r_json = sorted(r_json, key = lambda i: i['Name'])
+        return {"data": r_json}
 
     @endpoint(
         perm="can_access",
