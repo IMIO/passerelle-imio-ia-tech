@@ -203,6 +203,7 @@ class imio_atal(BaseResource):
             '$expand': 'Responses',
         }
 
+        log_requests_errors = False
         response = self.requests.get(
             url,
             params=params,
@@ -211,6 +212,7 @@ class imio_atal(BaseResource):
         )
 
         response_json = response.json()
+        log_requests_errors = True
 
         # Make it work anyway when Atal isn't up to date (if Responses expand does not work)
         if response_json.get('detail') and 'Responses' in response_json.get('detail'):
