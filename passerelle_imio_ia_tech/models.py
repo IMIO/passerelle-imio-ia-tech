@@ -412,7 +412,7 @@ class imio_atal(BaseResource):
         methods=["get"],
     )
     def read_materiel_list(self, request):
-        url = f"{self.base_url}/api/Patrimony"
+        url = f"{self.base_url}/api/Patrimonies"
         headers = {
             "accept": "application/json",
             # X-API-KEY is visible in ATAL admin panel
@@ -422,7 +422,7 @@ class imio_atal(BaseResource):
 
         # pour avoir le patrimoine louable
         params = {
-            "$filter": "Loanable",
+            "$filter": "CanBeLoaned",
         }
 
         try:
@@ -482,7 +482,7 @@ class imio_atal(BaseResource):
         methods=["get"],
     )
     def read_patrimoines_louable(self, request):
-        url = f"{self.base_url}/api/Patrimony"
+        url = f"{self.base_url}/api/Patrimonies"
         headers = {
             "accept": "application/json",
             # X-API-KEY is visible in ATAL admin panel
@@ -491,7 +491,7 @@ class imio_atal(BaseResource):
         }
 
         params = {
-            "$filter": "Loanable",
+            "$filter": "CanBeLoaned",
         }
 
         try:
@@ -757,9 +757,10 @@ class imio_atal(BaseResource):
         response = [
             x
             for x in response
-            if x["Item"]["ItemTemplate"]["Loanable"]
+            if x["Item"]["ItemTemplate"]["CanBeLoaned"]
         ]
 
+        # Suppression des doublons
         loanable_items = []
         for i in response:
             if i["ItemId"] not in [x["ItemId"] for x in loanable_items]:
