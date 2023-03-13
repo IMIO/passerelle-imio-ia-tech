@@ -55,6 +55,9 @@ class imio_atal(BaseResource):
     @endpoint(
         perm="can_access",
         description="Test methods",
+        long_description="Requête sur le endpoint Test de Atal",
+        display_order=0,
+        display_category="Test",
     )
     def test(self, request):
         atal_response = requests.get(
