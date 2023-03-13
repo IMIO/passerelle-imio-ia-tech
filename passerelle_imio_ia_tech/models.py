@@ -281,6 +281,7 @@ class imio_atal(BaseResource):
         description="Cherche le patrimoine louable dans ATAL.",
         long_description="Cherche le patrimoine louable dans ATAL, utile pour chercher les salles louables.",
         display_category="Location de Salles",
+        display_order=1,
         methods=["get"],
     )
     def read_patrimoines_louable(self, request):
@@ -296,19 +297,30 @@ class imio_atal(BaseResource):
             "$filter": "CanBeLoaned",
         }
 
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-                params=params,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
+        response = self.requests.get(
+            url,
+            headers=headers,
+            params=params,
+        )
+        response.raise_for_status()
 
-        return response  # must return dict
+        return response.json()  # must return dict
+
+    @endpoint(
+        name="get-rooms-name",
+        perm="can_access",
+        description="Get noms des salles louables dans ATAL.",
+        long_description="Cherche les noms des salles louables dans ATAL.",
+        display_category="Location de Salles",
+        display_order=2,
+        methods=["get"],
+    )
+    def read_rooms_name(self, request):
+        # liste de tous le patrimoine louable
+        patrimoines = self.read_patrimoines_louable(request)
+
+        # tri en fonction du type 1 (salle)
+        return {"data": [x for x in patrimoines if "Type" in x and x["Type"] == 1]}  # must return dict
 
     @endpoint(
         name="get-room-loans",
@@ -317,6 +329,7 @@ class imio_atal(BaseResource):
         methods=["get"],
         long_description="Cherche les locations de salles dans ATAL.",
         display_category="Location de Salles",
+        display_order=3,
     )
     def read_reservations_room(self, request):
         url = f"{self.base_url}/api/RoomLoans"
@@ -327,48 +340,14 @@ class imio_atal(BaseResource):
             "X-API-Key": self.api_key,
         }
 
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
+        response = self.requests.get(
+            url,
+            headers=headers,
+        )
 
-        return response  # must return dict
+        response.raise_for_status()
 
-    @endpoint(
-        name="get-reservation-room-detail",
-        perm="can_access",
-        description="get Les détails de locations de salles.",
-        methods=["get"],
-        long_description="Cherche les détails des réservations de salles dans ATAL.",
-        display_category="Location de Salles",
-    )
-    def read_reservations_room_details(self, request):
-        url = f"{self.base_url}/api/RoomLoans/Lines"
-        headers = {
-            "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
-            "X-API-Key": self.api_key,
-        }
-
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
-
-        return response  # must return dict
+        return response.json()  # must return dict
 
     @endpoint(
         name="get-reservation-room",
@@ -377,6 +356,7 @@ class imio_atal(BaseResource):
         methods=["get"],
         long_description="Lis une réservation de salle dans ATAL.",
         display_category="Location de Salles",
+        display_order=4,
         parameters={
             "id": {
                 "description": "id de la réservation",
@@ -393,34 +373,39 @@ class imio_atal(BaseResource):
             # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
+        response = self.requests.get(
+            url,
+            headers=headers,
+        )
 
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
+        response.raise_for_status()
 
-        return response  # must return dict
+        return response.json()  # must return dict
 
     @endpoint(
-        name="get-rooms-name",
+        name="get-reservation-room-detail",
         perm="can_access",
-        description="Get noms des salles louables dans ATAL.",
-        long_description="Cherche les noms des salles louables dans ATAL.",
-        display_category="Location de Salles",
+        description="get Les détails de locations de salles.",
         methods=["get"],
+        long_description="Cherche les détails des réservations de salles dans ATAL.",
+        display_category="Location de Salles",
+        display_order=5,
     )
-    def read_rooms_name(self, request):
-        # liste de tous le patrimoine louable
-        patrimoines = self.read_patrimoines_louable(request)
+    def read_reservations_room_details(self, request):
+        url = f"{self.base_url}/api/RoomLoans/Lines"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+        response = self.requests.get(
+            url,
+            headers=headers,
+        )
+        response.raise_for_status()
 
-        # tri en fonction du type 1 (salle)
-        return {"data": [x for x in patrimoines if "Type" in x and x["Type"] == 1]}  # must return dict
+        return response.json()  # must return dict
 
     @endpoint(
         name="get-rooms-dispo",
@@ -428,6 +413,7 @@ class imio_atal(BaseResource):
         description="Cherche les salles disponible pour une date donnée.",
         long_description="Cherche les salles disponible pour une date donnée dans ATAL.",
         display_category="Location de Salles",
+        display_order=6,
         methods=["get"],
         parameters={
             "date_debut": {
@@ -497,6 +483,7 @@ class imio_atal(BaseResource):
         description="Cherche les dates disponible pour une salle.",
         long_description="Cherche les dates disponible pour une salle dans ATAL.",
         display_category="Location de Salles",
+        display_order=7,
         methods=["get"],
         parameters={
             "room": {
@@ -524,11 +511,10 @@ class imio_atal(BaseResource):
 
         # tri des locations par rapport à une salle
         locations = [
-            x
-            for x in locations
-            if "RoomId" in x
-               and x["RoomId"] == int(room)
-               and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
+            x for x in locations if
+            "RoomId" in x and
+            x["RoomId"] == int(room) and
+            (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
         ]
 
         return {"data": locations}
@@ -539,6 +525,7 @@ class imio_atal(BaseResource):
         description="Inscrit une réservation de salle.",
         long_description="Inscrit une réservation de salle dans Atal.",
         display_category="Location de Salles",
+        display_order=8,
         methods=["get"],
         parameters={
             "date_debut": {
@@ -633,6 +620,8 @@ class imio_atal(BaseResource):
 
         response = self.requests.post(url, headers=headers, data=payload)
 
+        response.raise_for_status()
+
         return response.json()
 
     #############################
@@ -645,6 +634,7 @@ class imio_atal(BaseResource):
         description="Cherches les Items louables.",
         long_description="Cherches les Items louables dans Atal, utile pour savoir quel matériel est louable",
         display_category="Location de Matériels",
+        display_order=1,
         methods=["get"],
     )
     def get_loanable_items(self, request):
@@ -655,21 +645,16 @@ class imio_atal(BaseResource):
             # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
+        response = self.requests.get(
+            url,
+            headers=headers,
+        )
 
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
+        response.raise_for_status()
 
         response = [
             x
-            for x in response
+            for x in response.json()
             if x["Item"]["ItemTemplate"]["CanBeLoaned"]
         ]
 
@@ -682,71 +667,12 @@ class imio_atal(BaseResource):
         return {"datas": loanable_items}
 
     @endpoint(
-        name="get-materiel-loans",
-        perm="can_access",
-        description="Get les locations de materiel",
-        long_description="Lis les locations de matériel dans ATAL.",
-        display_category="Location de Matériels",
-        methods=["get"],
-    )
-    def read_reservations_materiel(self, request):
-        url = f"{self.base_url}/api/MaterialLoans"
-        headers = {
-            "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
-            "X-API-Key": self.api_key,
-        }
-
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
-
-        return response  # must return dict
-
-    @endpoint(
-        name="get-materiel-loans-details",
-        perm="can_access",
-        description="Get détails des locations de materiel.",
-        long_description="Cherche les détails des locations de materiel dans ATAL.",
-        display_category="Location de Matériels",
-        methods=["get"],
-    )
-    def read_materiel_loans_details(self, request):
-        url = f"{self.base_url}/api/MaterialLoans/Lines"
-        headers = {
-            "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
-            "X-API-Key": self.api_key,
-        }
-
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
-
-        return response  # must return dict
-
-    @endpoint(
         name="get-materiel-list",
         perm="can_access",
         description="Cherche le materiel louable dans ATAL.",
         long_description="Cherche le materiel louable dans ATAL.",
         display_category="Location de Matériels",
+        display_order=2,
         methods=["get"],
     )
     def read_materiel_list(self, request):
@@ -762,21 +688,42 @@ class imio_atal(BaseResource):
         params = {
             "$filter": "CanBeLoaned",
         }
+        response = self.requests.get(
+            url,
+            headers=headers,
+            params=params,
+        )
 
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-                params=params,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
+        response.raise_for_status()
 
         # retourne tout le patrimoine louable sauf les salles
-        return {"data": [x for x in response if "Type" in x and x["Type"] != 1]}  # must return dict
+        return {"data": [x for x in response.json() if "Type" in x and x["Type"] != 1]}  # must return dict
+
+    @endpoint(
+        name="get-materiel-loans",
+        perm="can_access",
+        description="Get les locations de materiel",
+        long_description="Lis les locations de matériel dans ATAL.",
+        display_category="Location de Matériels",
+        display_order=3,
+        methods=["get"],
+    )
+    def read_reservations_materiel(self, request):
+        url = f"{self.base_url}/api/MaterialLoans"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+        response = self.requests.get(
+            url,
+            headers=headers,
+        )
+
+        response.raise_for_status()
+
+        return response.json()  # must return dict
 
     @endpoint(
         name="get-reservation-materiel",
@@ -784,6 +731,7 @@ class imio_atal(BaseResource):
         description="Get réservation de materiel dans ATAL.",
         long_description="Lis une réservation de matériel dans ATAL",
         display_category="Location de Matériels",
+        display_order=4,
         methods=["get"],
         parameters={
             "id": {
@@ -801,19 +749,40 @@ class imio_atal(BaseResource):
             # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
+        response = self.requests.get(
+            url,
+            headers=headers,
+        )
 
-        try:
-            response = self.requests.get(
-                url,
-                headers=headers,
-            ).json()
-        except Exception as e:
-            raise APIError(
-                str(e),
-                http_status=405,
-            )
+        response.raise_for_status()
 
-        return response  # must return dict
+        return response.json()  # must return dict
+
+    @endpoint(
+        name="get-materiel-loans-details",
+        perm="can_access",
+        description="Get détails des locations de materiel.",
+        long_description="Cherche les détails des locations de materiel dans ATAL.",
+        display_category="Location de Matériels",
+        display_order=5,
+        methods=["get"],
+    )
+    def read_materiel_loans_details(self, request):
+        url = f"{self.base_url}/api/MaterialLoans/Lines"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+        response = self.requests.get(
+            url,
+            headers=headers,
+        )
+
+        response.raise_for_status()
+
+        return response.json()  # must return dict
 
     @endpoint(
         name="post-reservation-materiel",
@@ -821,6 +790,7 @@ class imio_atal(BaseResource):
         description="Inscrit une réservation de matériel.",
         long_description="Inscrit une réservation de matériel dans Atal.",
         display_category="Location de Matériels",
+        display_order=6,
         methods=["get"],
         parameters={
             "date_debut": {
@@ -900,5 +870,7 @@ class imio_atal(BaseResource):
         )
 
         response = self.requests.post(url, headers=headers, data=payload)
+
+        response.raise_for_status()
 
         return response.json()
