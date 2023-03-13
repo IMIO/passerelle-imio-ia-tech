@@ -272,7 +272,7 @@ class imio_atal(BaseResource):
         return {"data": response.json()}  # must return dict
 
     #########################
-    ### Location de salles###
+    ### Location de Salles###
     #########################
 
     @endpoint(
@@ -412,7 +412,7 @@ class imio_atal(BaseResource):
         perm="can_access",
         description="Get noms des salles louables dans ATAL.",
         long_description="Cherche les noms des salles louables dans ATAL.",
-        display_category="Location de salles",
+        display_category="Location de Salles",
         methods=["get"],
     )
     def read_rooms_name(self, request):
@@ -427,7 +427,7 @@ class imio_atal(BaseResource):
         perm="can_access",
         description="Cherche les salles disponible pour une date donnée.",
         long_description="Cherche les salles disponible pour une date donnée dans ATAL.",
-        display_category="Location de salles",
+        display_category="Location de Salles",
         methods=["get"],
         parameters={
             "date_debut": {
@@ -496,7 +496,7 @@ class imio_atal(BaseResource):
         perm="can_access",
         description="Cherche les dates disponible pour une salle.",
         long_description="Cherche les dates disponible pour une salle dans ATAL.",
-        display_category="Location de salles",
+        display_category="Location de Salles",
         methods=["get"],
         parameters={
             "room": {
@@ -538,7 +538,7 @@ class imio_atal(BaseResource):
         perm="can_access",
         description="Inscrit une réservation de salle.",
         long_description="Inscrit une réservation de salle dans Atal.",
-        display_category="Location de salles",
+        display_category="Location de Salles",
         methods=["get"],
         parameters={
             "date_debut": {
