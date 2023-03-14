@@ -301,6 +301,7 @@ class imio_atal(BaseResource):
             url,
             headers=headers,
             params=params,
+            verify=False,
         )
         response.raise_for_status()
 
@@ -343,6 +344,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
 
         response.raise_for_status()
@@ -376,6 +378,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
 
         response.raise_for_status()
@@ -402,6 +405,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
         response.raise_for_status()
 
@@ -618,7 +622,7 @@ class imio_atal(BaseResource):
             }
         )
 
-        response = self.requests.post(url, headers=headers, data=payload)
+        response = self.requests.post(url, headers=headers, data=payload, verify=False,)
 
         response.raise_for_status()
 
@@ -648,6 +652,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
 
         response.raise_for_status()
@@ -692,6 +697,7 @@ class imio_atal(BaseResource):
             url,
             headers=headers,
             params=params,
+            verify=False,
         )
 
         response.raise_for_status()
@@ -719,6 +725,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
 
         response.raise_for_status()
@@ -752,6 +759,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
 
         response.raise_for_status()
@@ -778,6 +786,7 @@ class imio_atal(BaseResource):
         response = self.requests.get(
             url,
             headers=headers,
+            verify=False,
         )
 
         response.raise_for_status()
@@ -869,7 +878,7 @@ class imio_atal(BaseResource):
             }
         )
 
-        response = self.requests.post(url, headers=headers, data=payload)
+        response = self.requests.post(url, headers=headers, data=payload, verify=False,)
 
         response.raise_for_status()
 
