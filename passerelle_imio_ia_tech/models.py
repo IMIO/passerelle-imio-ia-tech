@@ -472,8 +472,13 @@ class imio_atal(BaseResource):
             fin_location = string_to_datetime(location["EndDate"])
 
             # tri des salles en fonction des dates de locations
-            if debut_location < datetime_debut < fin_location or debut_location < datetime_fin < fin_location:
-                room_non_dispo.append(location["RoomId"])
+            if (
+                    debut_location <= datetime_debut <= fin_location or
+                    debut_location <= datetime_fin <= fin_location or
+                    datetime_debut <= debut_location <= datetime_fin or
+                    datetime_debut <= fin_location <= datetime_fin
+            ):
+                room_non_dispo.append(location.get("RoomId"))
 
         # liste des salles
         rooms = self.read_rooms_name(request)["data"]
@@ -622,7 +627,7 @@ class imio_atal(BaseResource):
             }
         )
 
-        response = self.requests.post(url, headers=headers, data=payload, verify=False,)
+        response = self.requests.post(url, headers=headers, data=payload, verify=False, )
 
         response.raise_for_status()
 
@@ -878,7 +883,7 @@ class imio_atal(BaseResource):
             }
         )
 
-        response = self.requests.post(url, headers=headers, data=payload, verify=False,)
+        response = self.requests.post(url, headers=headers, data=payload, verify=False, )
 
         response.raise_for_status()
 
