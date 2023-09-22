@@ -28,6 +28,8 @@ def string_to_datetime(date_string):
 
 
 class imio_atal(BaseResource):
+    """Connecteur permettant d'intéragir avec une instance d'Atal V6"""
+
     base_url = models.URLField(
         max_length=256,
         blank=False,
