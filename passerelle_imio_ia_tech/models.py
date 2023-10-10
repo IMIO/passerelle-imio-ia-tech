@@ -71,7 +71,7 @@ class imio_atal(BaseResource):
             verify=False,
         )
         r_json = response.json()
-        r_json = sorted(r_json, key = lambda i: i['Name'])
+        r_json = sorted(r_json, key=lambda i: i["Name"])
         return {"data": r_json}
 
     @endpoint(
@@ -204,7 +204,7 @@ class imio_atal(BaseResource):
         }
 
         params = {
-            '$expand': 'Responses',
+            "$expand": "Responses",
         }
 
         log_requests_errors = False
@@ -219,12 +219,8 @@ class imio_atal(BaseResource):
         log_requests_errors = True
 
         # Make it work anyway when Atal isn't up to date (if Responses expand does not work)
-        if response_json.get('detail') and 'Responses' in response_json.get('detail'):
-            response = self.requests.get(
-                url,
-                headers=headers,
-                verify=False
-            )
+        if response_json.get("detail") and "Responses" in response_json.get("detail"):
+            response = self.requests.get(url, headers=headers, verify=False)
             response_json = response.json()
 
         return {"data": response_json}  # must return dict
@@ -624,8 +620,8 @@ class imio_atal(BaseResource):
             x
             for x in locations
             if "RoomId" in x
-               and x["RoomId"] == int(room)
-               and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
+            and x["RoomId"] == int(room)
+            and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
         ]
 
         return {"data": locations}
@@ -679,16 +675,16 @@ class imio_atal(BaseResource):
         },
     )
     def write_reservation_room(
-            self,
-            request,
-            date_debut,
-            date_fin,
-            heure_debut,
-            heure_fin,
-            room,
-            nombre_personne_prevue=0,
-            nombre_personne_reel=0,
-            id_tier=63,
+        self,
+        request,
+        date_debut,
+        date_fin,
+        heure_debut,
+        heure_fin,
+        room,
+        nombre_personne_prevue=0,
+        nombre_personne_reel=0,
+        id_tier=63,
     ):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
@@ -756,11 +752,7 @@ class imio_atal(BaseResource):
                 http_status=405,
             )
 
-        response = [
-            x
-            for x in response
-            if x["Item"]["ItemTemplate"]["CanBeLoaned"]
-        ]
+        response = [x for x in response if x["Item"]["ItemTemplate"]["CanBeLoaned"]]
 
         # Suppression des doublons
         loanable_items = []
@@ -814,16 +806,8 @@ class imio_atal(BaseResource):
         },
     )
     def post_material_location(
-            self,
-            request,
-            date_debut,
-            date_fin,
-            heure_debut,
-            heure_fin,
-            material,
-            quantity,
-            id_tier):
-
+        self, request, date_debut, date_fin, heure_debut, heure_fin, material, quantity, id_tier
+    ):
         url = f"{self.base_url}/api/MaterialLoans"
         headers = {
             "accept": "application/json",
