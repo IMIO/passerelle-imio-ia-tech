@@ -83,6 +83,8 @@ class imio_atal(BaseResource):
         perm="can_access",
         description="Créer une demande de travaux dans ATAL",
         methods=["post"],
+        long_description="Crée une demande de travaux dans ATAL.",
+        display_category="Demandes de travaux",
     )
     def create_work_request(self, request):
         post_data = json.loads(request.body)
@@ -146,9 +148,10 @@ class imio_atal(BaseResource):
 
     @endpoint(
         perm="can_access",
-        description="Post files and join them to and ATAL work request.",
+        description="Attache des photos aux demandes de travaux dans ATAL.",
         methods=["post"],
         parameters={},
+        long_description=("Envoie des photos aux demandes de travaux dans ATAL. "),
     )
     def post_attachment(self, request):
         post_data = json.loads(request.body)
@@ -183,7 +186,7 @@ class imio_atal(BaseResource):
 
     @endpoint(
         perm="can_access",
-        description="Return work request details from ATAL.",
+        description="Récupère le détail d'une demande de travaux dans ATAL.",
         methods=["post"],
         parameters={
             "atal_work_request_uuid": {
@@ -192,6 +195,12 @@ class imio_atal(BaseResource):
                 "example_value": "11865d87-336b-49b3-e181-08d76f93d6b4",
             },
         },
+        long_description=(
+            "Actuellement employé dans Townstreet. Ce endpoint est plus "
+            "complet, mais devrait être refactoré, néttoyé (code obsolète) et "
+            "converti en GET"
+        ),
+        display_category="Demandes de travaux",
     )
     def get_work_request_details(self, request, *args, **kwargs):
         post_data = json.loads(request.body)  # http data from wcs webservice
@@ -244,6 +253,13 @@ class imio_atal(BaseResource):
                 "example_value": "11865d87-336b-49b3-e181-08d76f93d6b4",
             },
         },
+        long_description=(
+            "Pas employé dans Townstreet. Devrait être employé en mergeant "
+            "avec get_work_request_details. L'améliorer pour gérer "
+            "efficacement les exceptions (voir le code du endpoint) "
+            "'get-natures'). Adapter le workflow de Townstreet."
+        ),
+        display_category="Demandes de travaux",
     )
     def read_work_request_details(self, request, uuid):
         url = f"{self.base_url}/api/WorksRequests/{uuid}"
@@ -895,7 +911,7 @@ class imio_atal(BaseResource):
     @endpoint(
         name="get-natures",
         perm="can_access",
-        description="Cherche les natures dans ATAL.",
+        description="Cherche les thématiques dans ATAL.",
         methods=["get"],
         parameters={
             "primary_only": {
@@ -914,6 +930,7 @@ class imio_atal(BaseResource):
                 "example_value": 1744,
             },
         },
+        long_description="Récupère les thématiques (appellées aussi natures) dans ATAL.",
     )
     def get_atal_thematics(self, request=None, primary_only=False, secondary_only=False, parent_id=None):
         url = f"{self.base_url}/api/Thematics"
