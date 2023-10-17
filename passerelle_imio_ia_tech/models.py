@@ -853,3 +853,79 @@ class imio_atal(BaseResource):
         response = self.requests.post(url, headers=headers, data=payload)
 
         return response.json()
+
+    @endpoint(
+        name="get-natures",
+        perm="can_access",
+        description="Cherche les natures dans ATAL.",
+        methods=["get"],
+        parameters={
+            "primary_only": {
+                "description": "Si True, retourne les natures primaires",
+                "type": "boolean",
+                "example_value": True,
+            },
+            "secondary_only": {
+                "description": "Si True, retourne les natures secondaires",
+                "type": "boolean",
+                "example_value": True,
+            },
+            "parent_id": {
+                "description": "Si renseigné, retourne les natures secondaires de la nature parent_id",
+                "type": "int",
+                "example_value": 1744,
+            },
+        },
+    )
+    def get_atal_thematics(self, request=None, primary_only=False, secondary_only=False, parent_id=None):
+        url = f"{self.base_url}/api/Thematics"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+
+        try:
+            response = self.requests.get(
+                url,
+                headers=headers,
+            )
+        except (requests.Timeout, requests.RequestException) as exc:
+            raise APIError(str(exc))
+        try:
+            response.raise_for_status()
+        except requests.RequestException as main_exc:
+            try:
+                err_data = response.json()
+            except (json.JSONDecodeError, requests.exceptions.RequestException):
+                err_data = {"response_text": response.text}
+            raise APIError(str(main_exc), data=err_data)
+
+        try:
+            json_response = response.json()
+        except (json.JSONDecodeError, requests.exceptions.RequestException) as exc:
+            raise APIError(str(exc))
+
+        parsed_thematics = [
+            {
+                "id": item["Id"],
+                "label": item["Label"],
+                "complete_label": item["CompleteLabel"],
+                "parent_id": item.get("ParentThematicId", None),
+            }
+            for item in json_response
+            if item["Archived"] == False
+        ]
+
+        if primary_only:
+            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] is None]
+            return parsed_thematics
+
+        if secondary_only:
+            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] is not None]
+
+        if parent_id:
+            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] == parent_id]
+
+        return parsed_thematics
