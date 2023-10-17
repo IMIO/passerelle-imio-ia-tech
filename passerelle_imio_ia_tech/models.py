@@ -28,6 +28,8 @@ def string_to_datetime(date_string):
 
 
 class imio_atal(BaseResource):
+    """Connecteur permettant d'intéragir avec une instance d'Atal V6"""
+
     base_url = models.URLField(
         max_length=256,
         blank=False,
@@ -44,14 +46,6 @@ class imio_atal(BaseResource):
     class Meta:
         verbose_name = "Connecteur Atal (iMio)"
 
-    def check_status(self):
-        response = requests.get(
-            url=f"{self.base_url}/api/Test",
-            headers={"Accept": "text/plain", "X-API-Key": self.api_key},
-            verify=False,
-        )
-        response.raise_for_status()
-
     @endpoint(
         perm="can_access",
         description="Test methods",
@@ -59,7 +53,7 @@ class imio_atal(BaseResource):
         display_order=0,
         display_category="Test",
     )
-    def test(self, request):
+    def test(self, request=None):
         atal_response = requests.get(
             url=f"{self.base_url}/api/Test",
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
@@ -82,7 +76,7 @@ class imio_atal(BaseResource):
             verify=False,
         )
         r_json = response.json()
-        r_json = sorted(r_json, key=lambda i: i['Name'])
+        r_json = sorted(r_json, key=lambda i: i["Name"])
         return {"data": r_json}
 
     @endpoint(
@@ -215,7 +209,7 @@ class imio_atal(BaseResource):
         }
 
         params = {
-            '$expand': 'Responses',
+            "$expand": "Responses",
         }
 
         log_requests_errors = False
@@ -230,12 +224,8 @@ class imio_atal(BaseResource):
         log_requests_errors = True
 
         # Make it work anyway when Atal isn't up to date (if Responses expand does not work)
-        if response_json.get('detail') and 'Responses' in response_json.get('detail'):
-            response = self.requests.get(
-                url,
-                headers=headers,
-                verify=False
-            )
+        if response_json.get("detail") and "Responses" in response_json.get("detail"):
+            response = self.requests.get(url, headers=headers, verify=False)
             response_json = response.json()
 
         return {"data": response_json}  # must return dict
@@ -445,9 +435,15 @@ class imio_atal(BaseResource):
     def read_rooms_dispo(self, request, date_debut, date_fin, heure_debut, heure_fin):
         # format date
         date_debut = datetime.date(
-            int(date_debut.split("-")[0]), int(date_debut.split("-")[1]), int(date_debut.split("-")[2])
+            int(date_debut.split("-")[0]),
+            int(date_debut.split("-")[1]),
+            int(date_debut.split("-")[2]),
         )
-        date_fin = datetime.date(int(date_fin.split("-")[0]), int(date_fin.split("-")[1]), int(date_fin.split("-")[2]))
+        date_fin = datetime.date(
+            int(date_fin.split("-")[0]),
+            int(date_fin.split("-")[1]),
+            int(date_fin.split("-")[2]),
+        )
         # format heure
         heure_debut = time.strptime(heure_debut, "%H:%M")
         heure_debut = datetime.time(heure_debut.tm_hour, heure_debut.tm_min)
@@ -473,10 +469,10 @@ class imio_atal(BaseResource):
 
             # tri des salles en fonction des dates de locations
             if (
-                    debut_location <= datetime_debut <= fin_location or
-                    debut_location <= datetime_fin <= fin_location or
-                    datetime_debut <= debut_location <= datetime_fin or
-                    datetime_debut <= fin_location <= datetime_fin
+                debut_location <= datetime_debut <= fin_location
+                or debut_location <= datetime_fin <= fin_location
+                or datetime_debut <= debut_location <= datetime_fin
+                or datetime_debut <= fin_location <= datetime_fin
             ):
                 room_non_dispo.append(location.get("RoomId"))
 
@@ -520,10 +516,11 @@ class imio_atal(BaseResource):
 
         # tri des locations par rapport à une salle
         locations = [
-            x for x in locations if
-            "RoomId" in x and
-            x["RoomId"] == int(room) and
-            (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
+            x
+            for x in locations
+            if "RoomId" in x
+            and x["RoomId"] == int(room)
+            and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
         ]
 
         return {"data": locations}
@@ -580,16 +577,16 @@ class imio_atal(BaseResource):
         },
     )
     def write_reservation_room(
-            self,
-            request,
-            date_debut,
-            date_fin,
-            heure_debut,
-            heure_fin,
-            room,
-            nombre_personne_prevue=0,
-            nombre_personne_reel=0,
-            id_tier=63,
+        self,
+        request,
+        date_debut,
+        date_fin,
+        heure_debut,
+        heure_fin,
+        room,
+        nombre_personne_prevue=0,
+        nombre_personne_reel=0,
+        id_tier=63,
     ):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
@@ -627,7 +624,12 @@ class imio_atal(BaseResource):
             }
         )
 
-        response = self.requests.post(url, headers=headers, data=payload, verify=False, )
+        response = self.requests.post(
+            url,
+            headers=headers,
+            data=payload,
+            verify=False,
+        )
 
         response.raise_for_status()
 
@@ -662,11 +664,7 @@ class imio_atal(BaseResource):
 
         response.raise_for_status()
 
-        response = [
-            x
-            for x in response.json()
-            if x["Item"]["ItemTemplate"]["CanBeLoaned"]
-        ]
+        response = [x for x in response if x["Item"]["ItemTemplate"]["CanBeLoaned"]]
 
         # Suppression des doublons
         loanable_items = []
@@ -845,16 +843,16 @@ class imio_atal(BaseResource):
         },
     )
     def post_material_location(
-            self,
-            request,
-            date_debut,
-            date_fin,
-            heure_debut,
-            heure_fin,
-            material,
-            quantity,
-            id_tier):
-
+        self,
+        request,
+        date_debut,
+        date_fin,
+        heure_debut,
+        heure_fin,
+        material,
+        quantity,
+        id_tier,
+    ):
         url = f"{self.base_url}/api/MaterialLoans"
         headers = {
             "accept": "application/json",
@@ -883,8 +881,89 @@ class imio_atal(BaseResource):
             }
         )
 
-        response = self.requests.post(url, headers=headers, data=payload, verify=False, )
+        response = self.requests.post(
+            url,
+            headers=headers,
+            data=payload,
+            verify=False,
+        )
 
         response.raise_for_status()
 
         return response.json()
+
+    @endpoint(
+        name="get-natures",
+        perm="can_access",
+        description="Cherche les natures dans ATAL.",
+        methods=["get"],
+        parameters={
+            "primary_only": {
+                "description": "Si True, retourne les natures primaires",
+                "type": "boolean",
+                "example_value": True,
+            },
+            "secondary_only": {
+                "description": "Si True, retourne les natures secondaires",
+                "type": "boolean",
+                "example_value": True,
+            },
+            "parent_id": {
+                "description": "Si renseigné, retourne les natures secondaires de la nature parent_id",
+                "type": "int",
+                "example_value": 1744,
+            },
+        },
+    )
+    def get_atal_thematics(self, request=None, primary_only=False, secondary_only=False, parent_id=None):
+        url = f"{self.base_url}/api/Thematics"
+        headers = {
+            "accept": "application/json",
+            # X-API-KEY is visible in ATAL admin panel
+            # and set in the passerelle connector settings.
+            "X-API-Key": self.api_key,
+        }
+
+        try:
+            response = self.requests.get(
+                url,
+                headers=headers,
+            )
+        except (requests.Timeout, requests.RequestException) as exc:
+            raise APIError(str(exc))
+        try:
+            response.raise_for_status()
+        except requests.RequestException as main_exc:
+            try:
+                err_data = response.json()
+            except (json.JSONDecodeError, requests.exceptions.RequestException):
+                err_data = {"response_text": response.text}
+            raise APIError(str(main_exc), data=err_data)
+
+        try:
+            json_response = response.json()
+        except (json.JSONDecodeError, requests.exceptions.RequestException) as exc:
+            raise APIError(str(exc))
+
+        parsed_thematics = [
+            {
+                "id": item["Id"],
+                "label": item["Label"],
+                "complete_label": item["CompleteLabel"],
+                "parent_id": item.get("ParentThematicId", None),
+            }
+            for item in json_response
+            if item["Archived"] == False
+        ]
+
+        if primary_only:
+            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] is None]
+            return parsed_thematics
+
+        if secondary_only:
+            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] is not None]
+
+        if parent_id:
+            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] == parent_id]
+
+        return parsed_thematics
