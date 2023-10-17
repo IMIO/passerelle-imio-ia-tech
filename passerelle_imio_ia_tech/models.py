@@ -17,7 +17,7 @@ from passerelle.utils.jsonresponse import APIError
 # TODO : we should rename this class name with something like AtalConnector
 def string_to_datetime(date_string):
     """
-    convertit les dates string de Atal en datetime
+    convertit les dates string de ATAL en datetime
     :param date_string: string d'une date au format 2000-12-31T23:59...
     :return: datetime(year, month, day, hour, minute)
     """
@@ -28,7 +28,7 @@ def string_to_datetime(date_string):
 
 
 class imio_atal(BaseResource):
-    """Connecteur permettant d'intéragir avec une instance d'Atal V6"""
+    """Connecteur permettant d'intéragir avec une instance d'ATAL V6"""
 
     base_url = models.URLField(
         max_length=256,
@@ -40,16 +40,16 @@ class imio_atal(BaseResource):
         max_length=128,
         verbose_name="API Key",
     )
-    api_description = "Connecteur permettant d'intéragir avec une instance d'Atal V6"
+    api_description = "Connecteur permettant d'intéragir avec une instance d'ATAL V6"
     category = "Connecteurs iMio"
 
     class Meta:
-        verbose_name = "Connecteur Atal (iMio)"
+        verbose_name = "Connecteur ATAL (iMio)"
 
     @endpoint(
         perm="can_access",
         description="Test methods",
-        long_description="Requête sur le endpoint Test de Atal",
+        long_description="Requête sur le endpoint Test de ATAL.",
         display_order=0,
         display_category="Test",
     )
@@ -81,7 +81,7 @@ class imio_atal(BaseResource):
 
     @endpoint(
         perm="can_access",
-        description="Créer une demande de travaux dans Atal",
+        description="Créer une demande de travaux dans ATAL",
         methods=["post"],
     )
     def create_work_request(self, request):
@@ -529,7 +529,7 @@ class imio_atal(BaseResource):
         name="post-reservation-room",
         perm="can_access",
         description="Inscrit une réservation de salle.",
-        long_description="Inscrit une réservation de salle dans Atal.",
+        long_description="Inscrit une réservation de salle dans ATAL.",
         display_category="Location de Salles",
         display_order=8,
         methods=["get"],
@@ -643,7 +643,7 @@ class imio_atal(BaseResource):
         name="get-loanable-items",
         perm="can_access",
         description="Cherches les Items louables.",
-        long_description="Cherches les Items louables dans Atal, utile pour savoir quel matériel est louable",
+        long_description="Cherches les Items louables dans ATAL, utile pour savoir quel matériel est louable",
         display_category="Location de Matériels",
         display_order=1,
         methods=["get"],
@@ -800,7 +800,7 @@ class imio_atal(BaseResource):
         name="post-reservation-materiel",
         perm="can_access",
         description="Inscrit une réservation de matériel.",
-        long_description="Inscrit une réservation de matériel dans Atal.",
+        long_description="Inscrit une réservation de matériel dans ATAL.",
         display_category="Location de Matériels",
         display_order=6,
         methods=["get"],
