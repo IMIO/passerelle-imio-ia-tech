@@ -50,7 +50,7 @@ class imio_atal(BaseResource):
         perm="can_access",
         description="Test methods",
     )
-    def test(self, request):
+    def test(self, request=None):
         atal_response = requests.get(
             url=f"{self.base_url}/api/Test",
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
