@@ -48,7 +48,7 @@ class imio_atal(BaseResource):
 
     @endpoint(
         perm="can_access",
-        description="Test methods",
+        description="Méthode de test",
         long_description="Requête sur le endpoint Test de ATAL.",
         display_order=0,
         display_category="Test",
