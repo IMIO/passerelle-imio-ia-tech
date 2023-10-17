@@ -132,6 +132,7 @@ class imio_atal(BaseResource):
         methods=["post"],
         parameters={},
         long_description=("Envoie des photos aux demandes de travaux dans ATAL. "),
+        display_category="Demandes de travaux",
     )
     def post_attachment(self, request):
         post_data = json.loads(request.body)
@@ -888,6 +889,7 @@ class imio_atal(BaseResource):
             },
         },
         long_description="Récupère les thématiques (appellées aussi natures) dans ATAL.",
+        display_category="Utilitaires",
     )
     def get_atal_thematics(
         self, request=None, primary_only=False, secondary_only=False, parent_id=None
