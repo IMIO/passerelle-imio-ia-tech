@@ -59,7 +59,9 @@ class imio_atal(BaseResource):
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
             verify=False,
         )
-        atal_response_format = "{} - {}".format(atal_response.status_code, atal_response.text)
+        atal_response_format = "{} - {}".format(
+            atal_response.status_code, atal_response.text
+        )
         return atal_response_format
 
     @endpoint(
@@ -88,8 +90,6 @@ class imio_atal(BaseResource):
     )
     def create_work_request(self, request):
         post_data = json.loads(request.body)
-        # commented parameters below are not required
-        # TODO : use post_data.get('mavar', '') if MaVar is optionnal
         data_to_atal = {
             "Contact": {
                 "FirstName": post_data["atal_contact_firstname"],
@@ -102,42 +102,22 @@ class imio_atal(BaseResource):
                 "City": post_data["atal_contact_city"],
             },
             "RequesterId": post_data["atal_requester_id"],
-            # "Operator": post_data["atal_operator"],
             "Object": post_data["atal_object"],
             "Description": post_data["atal_description"],
-            # "DesiredDate": post_data["atal_desired_date"],
             "RecipientId": post_data["atal_recipient_id"],
             "RequestingDepartmentId": post_data["atal_requesting_department_id"],
             "RequestType": post_data["atal_request_type"],
-            # "RequestDate": post_data["atal_request_date"],
             "Localization": post_data["atal_localization"],
-            # "PatrimonyId": post_data["atal_patrimony_id"],
             "Longitude": post_data["atal_longitude"],
             "Latitude": post_data["atal_latitude"],
         }
-        # Raw data that works locally with Postman or Python request on atal demo
-        # TODO : adapt and move them to schema
-        """
-        data_to_atal = {
-            "RequesterId": 13,
-            "RecipientId": 1004,
-            "RequestingDepartmentId": 690,
-            "Localization": "Bruxelles",
-            "latitude": 50.844998072856825,
-            "longitude": 4.349986346839887,
-            "Object": "Test via Python request (objet)",
-            "Description": "Test via Python request (description)",
-            "RequestType": 1001,
-        }
-        """
+        # TODO : Use schemas as Entr'Ouvert does
+
         response = self.requests.post(
-            # Endpoints are described in ATAl Swagger
             f"{self.base_url}/api/WorksRequests",
             json=data_to_atal,
             headers={
                 "accept": "application/json",
-                # X-API-KEY is visible in ATAL admin panel
-                # and set in the passerelle connector settings.
                 "X-API-Key": self.api_key,
                 "Content-Type": "application/json",
             },
@@ -162,12 +142,10 @@ class imio_atal(BaseResource):
         image_for_atal = BytesIO(decoded_image)
         # uuid is fetched from ATAL work request creation response in wcs vars
         work_request_uuid = post_data["atal_work_request_uuid"]
-        # X-API-KEY is visible in ATAL admin panel
-        # and set in the passerelle connector settings.
         headers = {
             "X-API-Key": self.api_key,
         }
-        # This is multipart/formdata http request file syntax
+        # multipart/formdata http request specific syntax
         files = {
             "file": (
                 post_data["atal_attachment1"]["filename"],
@@ -184,6 +162,7 @@ class imio_atal(BaseResource):
 
         return {"data": response.json()}  # must return dict
 
+    # TODO: Delete this one and use read_work_request_details instead
     @endpoint(
         perm="can_access",
         description="Récupère le détail d'une demande de travaux dans ATAL.",
@@ -204,16 +183,10 @@ class imio_atal(BaseResource):
     )
     def get_work_request_details(self, request, *args, **kwargs):
         post_data = json.loads(request.body)  # http data from wcs webservice
-
-        # ATAL 6 require uuid in the url as an endpoint
-        # for example :
-        # https://demov6.imio-app.be/api/WorksRequests/11865d87-336b-49b3-e181-08d76f93d6b4
         uuid = post_data["atal_work_request_uuid"]
         url = f"{self.base_url}/api/WorksRequests/{uuid}"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
 
@@ -232,17 +205,18 @@ class imio_atal(BaseResource):
         response_json = response.json()
         log_requests_errors = True
 
-        # Make it work anyway when Atal isn't up to date (if Responses expand does not work)
+        # Make it work anyway when ATAL isn't up to date (if Responses expand does not work)
         if response_json.get("detail") and "Responses" in response_json.get("detail"):
             response = self.requests.get(url, headers=headers, verify=False)
             response_json = response.json()
 
         return {"data": response_json}  # must return dict
 
+    # TODO: Use this one instead of get_work_request_details (refactor needed)
     @endpoint(
         name="work-request-details",
         perm="can_access",
-        description="Return work request details from ATAL.",
+        description="Renvoie le détail d'une demande de travaux dans ATAL.",
         methods=["get"],
         pattern=r"^(?P<uuid>[\w-]+)/$",
         example_pattern="{uuid}/",
@@ -265,8 +239,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/WorksRequests/{uuid}"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
         response = self.requests.get(
@@ -294,8 +266,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/Patrimonies"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
 
@@ -327,7 +297,9 @@ class imio_atal(BaseResource):
         patrimoines = self.read_patrimoines_louable(request)
 
         # tri en fonction du type 1 (salle)
-        return {"data": [x for x in patrimoines if "Type" in x and x["Type"] == 1]}  # must return dict
+        return {
+            "data": [x for x in patrimoines if "Type" in x and x["Type"] == 1]
+        }  # must return dict
 
     @endpoint(
         name="get-room-loans",
@@ -342,8 +314,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
 
@@ -377,8 +347,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/RoomLoans/{id}"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
         response = self.requests.get(
@@ -404,8 +372,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/RoomLoans/Lines"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
         response = self.requests.get(
@@ -496,7 +462,9 @@ class imio_atal(BaseResource):
         rooms = self.read_rooms_name(request)["data"]
 
         # tri des salles pour avoir les dispo
-        return {"data": [x for x in rooms if x["Id"] not in room_non_dispo]}  # must return dict
+        return {
+            "data": [x for x in rooms if x["Id"] not in room_non_dispo]
+        }  # must return dict
 
     @endpoint(
         name="get-dates-dispo",
@@ -536,7 +504,8 @@ class imio_atal(BaseResource):
             for x in locations
             if "RoomId" in x
             and x["RoomId"] == int(room)
-            and (today + datetime.timedelta(days=delai)) < string_to_datetime(x["StartDate"])
+            and (today + datetime.timedelta(days=delai))
+            < string_to_datetime(x["StartDate"])
         ]
 
         return {"data": locations}
@@ -607,8 +576,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
             "Content-Type": "application/json",
         }
@@ -668,8 +635,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/InventoriedItems"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
         response = self.requests.get(
@@ -703,8 +668,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/Patrimonies"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
 
@@ -722,7 +685,9 @@ class imio_atal(BaseResource):
         response.raise_for_status()
 
         # retourne tout le patrimoine louable sauf les salles
-        return {"data": [x for x in response.json() if "Type" in x and x["Type"] != 1]}  # must return dict
+        return {
+            "data": [x for x in response.json() if "Type" in x and x["Type"] != 1]
+        }  # must return dict
 
     @endpoint(
         name="get-materiel-loans",
@@ -737,8 +702,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/MaterialLoans"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
         response = self.requests.get(
@@ -771,8 +734,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/MaterialLoans/{id}"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
         response = self.requests.get(
@@ -798,8 +759,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/MaterialLoans/Lines"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
         response = self.requests.get(
@@ -872,8 +831,6 @@ class imio_atal(BaseResource):
         url = f"{self.base_url}/api/MaterialLoans"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
             "Content-Type": "application/json",
         }
@@ -932,12 +889,12 @@ class imio_atal(BaseResource):
         },
         long_description="Récupère les thématiques (appellées aussi natures) dans ATAL.",
     )
-    def get_atal_thematics(self, request=None, primary_only=False, secondary_only=False, parent_id=None):
+    def get_atal_thematics(
+        self, request=None, primary_only=False, secondary_only=False, parent_id=None
+    ):
         url = f"{self.base_url}/api/Thematics"
         headers = {
             "accept": "application/json",
-            # X-API-KEY is visible in ATAL admin panel
-            # and set in the passerelle connector settings.
             "X-API-Key": self.api_key,
         }
 
@@ -974,13 +931,19 @@ class imio_atal(BaseResource):
         ]
 
         if primary_only:
-            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] is None]
+            parsed_thematics = [
+                item for item in parsed_thematics if item["parent_id"] is None
+            ]
             return parsed_thematics
 
         if secondary_only:
-            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] is not None]
+            parsed_thematics = [
+                item for item in parsed_thematics if item["parent_id"] is not None
+            ]
 
         if parent_id:
-            parsed_thematics = [item for item in parsed_thematics if item["parent_id"] == parent_id]
+            parsed_thematics = [
+                item for item in parsed_thematics if item["parent_id"] == parent_id
+            ]
 
         return parsed_thematics
