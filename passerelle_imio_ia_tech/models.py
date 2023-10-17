@@ -8,6 +8,7 @@ from io import BytesIO
 import requests
 from django.db import models
 from django.http import JsonResponse
+
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
 from passerelle.utils.api import endpoint
@@ -949,7 +950,7 @@ class imio_atal(BaseResource):
 
         sorted_parsed_thematics = sorted(
             parsed_thematics,
-            key=lambda x: unicodedata.normalize('NFC', x['label'])
+            key=lambda x: unicodedata.normalize("NFC", x["complete_label"]),
         )
 
         return {"data": sorted_parsed_thematics}
