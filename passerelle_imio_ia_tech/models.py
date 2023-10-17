@@ -2,6 +2,7 @@ import base64
 import datetime
 import json
 import time
+import unicodedata
 from io import BytesIO
 
 import requests
@@ -946,7 +947,9 @@ class imio_atal(BaseResource):
                 item for item in parsed_thematics if item["parent_id"] == parent_id
             ]
 
-        sorted_parsed_thematics = sorted(parsed_thematics, key=lambda x: x["label"])
+        sorted_parsed_thematics = sorted(
+            parsed_thematics,
+            key=lambda x: unicodedata.normalize('NFC', x['label'])
+        )
 
         return {"data": sorted_parsed_thematics}
-
