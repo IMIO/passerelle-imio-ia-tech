@@ -929,14 +929,13 @@ class imio_atal(BaseResource):
                 "parent_id": item.get("ParentThematicId", None),
             }
             for item in json_response
-            if item["Archived"] == False
+            if not item["Archived"]
         ]
 
         if primary_only:
             parsed_thematics = [
                 item for item in parsed_thematics if item["parent_id"] is None
             ]
-            return parsed_thematics
 
         if secondary_only:
             parsed_thematics = [
@@ -948,4 +947,4 @@ class imio_atal(BaseResource):
                 item for item in parsed_thematics if item["parent_id"] == parent_id
             ]
 
-        return parsed_thematics
+        return {"data": parsed_thematics}
