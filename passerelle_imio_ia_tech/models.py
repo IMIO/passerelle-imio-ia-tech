@@ -550,9 +550,15 @@ class imio_atal(BaseResource):
     def read_rooms_dispo(self, request, date_debut, date_fin, heure_debut, heure_fin):
         # format date
         date_debut = datetime.date(
-            int(date_debut.split("-")[0]), int(date_debut.split("-")[1]), int(date_debut.split("-")[2])
+            int(date_debut.split("-")[0]),
+            int(date_debut.split("-")[1]),
+            int(date_debut.split("-")[2]),
         )
-        date_fin = datetime.date(int(date_fin.split("-")[0]), int(date_fin.split("-")[1]), int(date_fin.split("-")[2]))
+        date_fin = datetime.date(
+            int(date_fin.split("-")[0]),
+            int(date_fin.split("-")[1]),
+            int(date_fin.split("-")[2]),
+        )
         # format heure
         heure_debut = time.strptime(heure_debut, "%H:%M")
         heure_debut = datetime.time(heure_debut.tm_hour, heure_debut.tm_min)
@@ -806,7 +812,15 @@ class imio_atal(BaseResource):
         },
     )
     def post_material_location(
-        self, request, date_debut, date_fin, heure_debut, heure_fin, material, quantity, id_tier
+        self,
+        request,
+        date_debut,
+        date_fin,
+        heure_debut,
+        heure_fin,
+        material,
+        quantity,
+        id_tier,
     ):
         url = f"{self.base_url}/api/MaterialLoans"
         headers = {
