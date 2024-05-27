@@ -542,7 +542,7 @@ class imio_atal(BaseResource):
         start_date = datetime.date.today() + datetime.timedelta(days=start)
         end_date = datetime.date.today() + datetime.timedelta(days=end)
         delta = end_date - start_date
-        days = [start_date + datetime.timedelta(days=x) for x in range(1, delta.days + 1)]
+        days = [start_date + datetime.timedelta(days=x) for x in range(delta.days + 1)]
         free_days = []
         for day in days:
             text = day.strftime("%d/%m/%Y")
