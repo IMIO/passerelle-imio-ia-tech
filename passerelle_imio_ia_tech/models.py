@@ -494,8 +494,7 @@ class imio_atal(BaseResource):
         locations = self.read_reservations_room_details(request)
 
         # définition de la date d'aujourd'hui en datetime
-        now = datetime.datetime.now()
-        today = datetime.datetime(now.year, now.month, now.day)
+        today = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 
         # convert string to dict
         # room = ast.literal_eval(room)
@@ -513,12 +512,56 @@ class imio_atal(BaseResource):
         return {"data": locations}
 
     @endpoint(
+        name="generate-day-availability",
+        perm="can_access",
+        description="Générer la source de données des jours de disponibilité",
+        long_description="Générer la source de données des jours de disponibilité pour une salle donnée dans ATAL.",
+        display_category="Location de Salles",
+        display_order=8,
+        methods=["get"],
+        parameters={
+            "room": {
+                "description": "salle",
+                "type": "int",
+                "example_value": 2732,
+            },
+            "start": {
+                "description": "délai minimum à l'introduction de la demande",
+                "type": "int",
+                "example_value": 90,
+            },
+            "end": {
+                "description": "délai maximum à l'introduction de la demande",
+                "type": "int",
+                "example_value": 365,
+            },
+        },
+    )
+    def generate_day_availability(self, request, room, start=0, end=365):
+        indisponibilites = self.read_dates_dispo(request, room, start)["data"]
+        start_date = datetime.date.today() + datetime.timedelta(days=start)
+        end_date = datetime.date.today() + datetime.timedelta(days=end)
+        delta = end_date - start_date
+        days = [start_date + datetime.timedelta(days=x) for x in range(delta.days + 1)]
+        free_days = []
+        for day in days:
+            text = day.strftime("%d/%m/%Y")
+            id = day.strftime("%Y-%m-%d")
+            disabled = True in [
+                string_to_datetime(x["StartDate"]) <= day <= string_to_datetime(x["EndDate"])
+                for x in indisponibilites
+            ]
+            free_days.append({"text": text, "id": id, "disabled": disabled})
+        return {"data": free_days}
+
+
+    @endpoint(
         name="post-reservation-room",
         perm="can_access",
         description="Inscrit une réservation de salle.",
         long_description="Inscrit une réservation de salle dans ATAL.",
         display_category="Location de Salles",
-        display_order=8,
+        display_order=9,
         methods=["get"],
         parameters={
             "date_debut": {
