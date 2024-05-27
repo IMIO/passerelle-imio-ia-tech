@@ -177,9 +177,9 @@ class imio_atal(BaseResource):
             },
         },
         long_description=(
-            "Actuellement employé dans Townstreet. Ce endpoint est plus "
-            "complet, mais devrait être refactoré, néttoyé (code obsolète) et "
-            "converti en GET"
+                "Actuellement employé dans Townstreet. Ce endpoint est plus "
+                "complet, mais devrait être refactoré, néttoyé (code obsolète) et "
+                "converti en GET"
         ),
         display_category="Demandes de travaux",
     )
@@ -230,10 +230,10 @@ class imio_atal(BaseResource):
             },
         },
         long_description=(
-            "Pas employé dans Townstreet. Devrait être employé en mergeant "
-            "avec get_work_request_details. L'améliorer pour gérer "
-            "efficacement les exceptions (voir le code du endpoint) "
-            "'get-natures'). Adapter le workflow de Townstreet."
+                "Pas employé dans Townstreet. Devrait être employé en mergeant "
+                "avec get_work_request_details. L'améliorer pour gérer "
+                "efficacement les exceptions (voir le code du endpoint) "
+                "'get-natures'). Adapter le workflow de Townstreet."
         ),
         display_category="Demandes de travaux",
     )
@@ -453,10 +453,10 @@ class imio_atal(BaseResource):
 
             # tri des salles en fonction des dates de locations
             if (
-                debut_location <= datetime_debut <= fin_location
-                or debut_location <= datetime_fin <= fin_location
-                or datetime_debut <= debut_location <= datetime_fin
-                or datetime_debut <= fin_location <= datetime_fin
+                    debut_location <= datetime_debut <= fin_location
+                    or debut_location <= datetime_fin <= fin_location
+                    or datetime_debut <= debut_location <= datetime_fin
+                    or datetime_debut <= fin_location <= datetime_fin
             ):
                 room_non_dispo.append(location.get("RoomId"))
 
@@ -504,9 +504,9 @@ class imio_atal(BaseResource):
             x
             for x in locations
             if "RoomId" in x
-            and x["RoomId"] == int(room)
-            and (today + datetime.timedelta(days=delai))
-            < string_to_datetime(x["StartDate"])
+               and x["RoomId"] == int(room)
+               and (today + datetime.timedelta(days=delai))
+               < string_to_datetime(x["StartDate"])
         ]
 
         return {"data": locations}
@@ -547,13 +547,76 @@ class imio_atal(BaseResource):
         for day in days:
             text = day.strftime("%d/%m/%Y")
             id = day.strftime("%Y-%m-%d")
+            start_date = day.strftime("%Y-%m-%d")
+            end_date = day.strftime("%Y-%m-%d")
+            start_time = "00:00"
+            end_time = "23:59"
             disabled = True in [
-                string_to_datetime(x["StartDate"]) <= day <= string_to_datetime(x["EndDate"])
+                string_to_datetime(x["StartDate"]).date() <= day <= string_to_datetime(x["EndDate"]).date()
                 for x in indisponibilites
             ]
-            free_days.append({"text": text, "id": id, "disabled": disabled})
+            free_days.append(
+                {"text": text, "id": id, "start_date": start_date, "end_date": end_date, "start_time": start_time,
+                 "end_time": end_time, "disabled": disabled})
         return {"data": free_days}
 
+    @endpoint(
+        name="bookings-room",
+        perm="can_access",
+        description="Réserver une salle",
+        long_description="Réserver une salle dans ATAL avec plusieurs plages horaires.",
+        display_category="Location de Salles",
+        display_order=9,
+        methods=["post"],
+        parameters={
+            "room": {
+                "description": "salle",
+                "type": "int",
+                "example_value": 2732,
+            },
+            "nombre_personne_prevue": {
+                "description": "Nombre de personne prévue",
+                "type": "int",
+                "example_value": 0,
+            },
+            "nombre_personne_reel": {
+                "description": "Nombre de personne réel",
+                "type": "int",
+                "example_value": 0,
+            },
+            "id_tier": {
+                "description": "Aucune idée",
+                "type": "int",
+                "example_value": 63,
+            },
+        }
+    )
+    def bookings_room(self, request, room, nombre_personne_prevue=0, nombre_personne_reel=0, id_tier=63):
+        post_data = json.loads(request.body)
+        booking_dates = post_data.get("booking_dates", [])
+        delta = datetime.timedelta(minutes=1)
+        merged_intervals = []
+        current_interval = booking_dates[0]
+
+        for i in range(1, len(booking_dates)):
+            current_end = string_to_datetime(f'{current_interval["end_date"]}T{current_interval["end_time"]}')
+            next_start = string_to_datetime(f'{booking_dates[i]["start_date"]}T{booking_dates[i]["start_time"]}')
+
+            # Vérifier s'il n'y a qu'une minute d'écart
+            if next_start == current_end + delta:
+                current_interval["end_date"] = booking_dates[i]["end_date"]
+                current_interval["end_time"] = booking_dates[i]["end_time"]
+            else:
+                merged_intervals.append(current_interval)
+                current_interval = booking_dates[i]
+
+        # Ajouter le dernier intervalle
+        merged_intervals.append(current_interval)
+
+        for interval in merged_intervals:
+            self.write_reservation_room(request, interval["start_date"], interval["end_date"], interval["start_time"],
+                                        interval["end_time"], room, nombre_personne_prevue, nombre_personne_reel,
+                                        id_tier)
 
     @endpoint(
         name="post-reservation-room",
@@ -561,7 +624,7 @@ class imio_atal(BaseResource):
         description="Inscrit une réservation de salle.",
         long_description="Inscrit une réservation de salle dans ATAL.",
         display_category="Location de Salles",
-        display_order=9,
+        display_order=10,
         methods=["get"],
         parameters={
             "date_debut": {
@@ -607,16 +670,16 @@ class imio_atal(BaseResource):
         },
     )
     def write_reservation_room(
-        self,
-        request,
-        date_debut,
-        date_fin,
-        heure_debut,
-        heure_fin,
-        room,
-        nombre_personne_prevue=0,
-        nombre_personne_reel=0,
-        id_tier=63,
+            self,
+            request,
+            date_debut,
+            date_fin,
+            heure_debut,
+            heure_fin,
+            room,
+            nombre_personne_prevue=0,
+            nombre_personne_reel=0,
+            id_tier=63,
     ):
         url = f"{self.base_url}/api/RoomLoans"
         headers = {
@@ -863,15 +926,15 @@ class imio_atal(BaseResource):
         },
     )
     def post_material_location(
-        self,
-        request,
-        date_debut,
-        date_fin,
-        heure_debut,
-        heure_fin,
-        material,
-        quantity,
-        id_tier,
+            self,
+            request,
+            date_debut,
+            date_fin,
+            heure_debut,
+            heure_fin,
+            material,
+            quantity,
+            id_tier,
     ):
         url = f"{self.base_url}/api/MaterialLoans"
         headers = {
@@ -936,7 +999,7 @@ class imio_atal(BaseResource):
         display_category="Utilitaires",
     )
     def get_atal_thematics(
-        self, request=None, primary_only=False, secondary_only=False, parent_id=None
+            self, request=None, primary_only=False, secondary_only=False, parent_id=None
     ):
         url = f"{self.base_url}/api/Thematics"
         headers = {
