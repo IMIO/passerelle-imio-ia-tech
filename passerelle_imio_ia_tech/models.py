@@ -601,7 +601,7 @@ class imio_atal(BaseResource):
             start_time = hour.strftime("%H:%M")
             end_time = hour.strftime("%H:59")
             disabled = True in [
-                string_to_datetime(x["StartDate"]).date() <= hour <= string_to_datetime(x["EndDate"]).date() and
+                string_to_datetime(x["StartDate"]).date() <= hour.date() <= string_to_datetime(x["EndDate"]).date() and
                 string_to_datetime(x["StartDate"]).hour <= hour.hour <= string_to_datetime(x["EndDate"]).hour
                 for x in indisponibilites
             ]
