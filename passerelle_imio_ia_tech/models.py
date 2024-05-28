@@ -561,6 +561,56 @@ class imio_atal(BaseResource):
         return {"data": free_days}
 
     @endpoint(
+        name="generate-hour-availability",
+        perm="can_access",
+        description="Générer la source de données des heures de disponibilité",
+        long_description="Générer la source de données des heures de disponibilité pour une salle donnée dans ATAL.",
+        display_category="Location de Salles",
+        display_order=8,
+        methods=["get"],
+        parameters={
+            "room": {
+                "description": "salle",
+                "type": "int",
+                "example_value": 2732,
+            },
+            "start": {
+                "description": "délai minimum à l'introduction de la demande",
+                "type": "int",
+                "example_value": 90,
+            },
+            "end": {
+                "description": "délai maximum à l'introduction de la demande",
+                "type": "int",
+                "example_value": 365,
+            },
+        },
+    )
+    def generate_hour_availability(self, request, room, start=0, end=365):
+        indisponibilites = self.read_dates_dispo(request, room, start)["data"]
+        start_datetime = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time()) + datetime.timedelta(days=start)
+        end_datetime = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 0)) + datetime.timedelta(days=end)
+        delta = int((end_datetime - start_datetime).total_seconds() / 3600)
+        hours = [start_datetime + datetime.timedelta(hours=x) for x in range(delta + 1)]
+        free_hours = []
+        for hour in hours:
+            text = hour.strftime("%d/%m/%Y %H:%M")
+            id = hour.strftime("%Y-%m-%dT%H:%M")
+            start_date = hour.strftime("%Y-%m-%d")
+            end_date = hour.strftime("%Y-%m-%d")
+            start_time = hour.strftime("%H:%M")
+            end_time = hour.strftime("%H:59")
+            disabled = True in [
+                string_to_datetime(x["StartDate"]).date() <= hour <= string_to_datetime(x["EndDate"]).date() and
+                string_to_datetime(x["StartDate"]).hour <= hour.hour <= string_to_datetime(x["EndDate"]).hour
+                for x in indisponibilites
+            ]
+            free_hours.append(
+                {"text": text, "id": id, "start_date": start_date, "end_date": end_date, "start_time": start_time,
+                 "end_time": end_time, "disabled": disabled})
+        return {"data": free_hours}
+
+    @endpoint(
         name="bookings-room",
         perm="can_access",
         description="Réserver une salle",
