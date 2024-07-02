@@ -663,10 +663,15 @@ class imio_atal(BaseResource):
         # Ajouter le dernier intervalle
         merged_intervals.append(current_interval)
 
+        responses = {"data": []}
+
         for interval in merged_intervals:
-            self.write_reservation_room(request, interval["start_date"], interval["end_date"], interval["start_time"],
+            response = self.write_reservation_room(request, interval["start_date"], interval["end_date"], interval["start_time"],
                                         interval["end_time"], room, nombre_personne_prevue, nombre_personne_reel,
                                         id_tier)
+            responses["data"].append(response)
+
+        return responses
 
     @endpoint(
         name="post-reservation-room",
