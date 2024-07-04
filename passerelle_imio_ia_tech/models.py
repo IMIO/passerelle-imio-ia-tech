@@ -13,6 +13,7 @@ from django.http import JsonResponse
 from passerelle.base.models import BaseResource
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
+from requests import RequestException
 
 
 # TODO : we should rename this class name with something like AtalConnector
@@ -780,6 +781,70 @@ class imio_atal(BaseResource):
         response.raise_for_status()
 
         return response.json()
+
+    @endpoint(
+        name="patch-booking-room",
+        perm="can_access",
+        description="Modifie le statut d'une réservation de salle.",
+        long_description="Modifie le statut d'une réservation de salle dans ATAL.",
+        display_category="Location de Salles",
+        display_order=11,
+        methods=["patch"],
+        parameters={
+            "room_loan_id": {
+                "description": "id de la réservation de salle",
+                "type": "int",
+                "example_value": 2573,
+            },
+            "request_state": {
+                "description": "statut de la réservation : 0 = Pending, 2 = Accepted, 3 = Refused, 4 = Cancelled",
+                "type": "int",
+                "example_value": 0,
+            },
+        },
+    )
+    def update_booking_room(
+            self,
+            request,
+            room_loan_id,
+            request_state,
+    ):
+        url = f"{self.base_url}/api/RoomLoans?id={room_loan_id}"
+        headers = {
+            "accept": "application/json",
+            "X-API-Key": self.api_key,
+            "Content-Type": "application/json",
+        }
+        payload = json.dumps({"RequestState": request_state})
+
+        try:
+            response = requests.patch(
+                url,
+                headers=headers,
+                data=payload,
+                verify=False,
+            )
+        except RequestException as e:
+            self.logger.warning(f'ATAL Error: {e}')
+            raise APIError(f'ATAL Error: {e}')
+
+        if response.headers.get('Content-Type') == 'application/json':
+            json_response = None
+            try:
+                json_response = response.json()
+            except ValueError:
+                self.logger.warning('ATAL Error: bad JSON response')
+                raise APIError('ATAL Error: bad JSON response')
+
+            return json_response
+
+        try:
+            response.raise_for_status()
+        except RequestException as e:
+            self.logger.warning(f'ATAL Error: {e}')
+            raise APIError(f'ATAL Error: {e}')
+        self.logger.info(f'ATAL PATCH Booking Room {room_loan_id} successful')
+        return
 
     #############################
     ### Location de matériels ###
