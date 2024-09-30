@@ -360,7 +360,7 @@ class imio_atal(BaseResource):
 
         response.raise_for_status()
 
-        return response.json()  # must return dict
+        return {"data": response.json()}  # must return dict
 
     @endpoint(
         name="get-reservation-room-detail",
