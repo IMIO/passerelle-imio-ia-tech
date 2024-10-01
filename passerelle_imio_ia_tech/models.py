@@ -789,7 +789,7 @@ class imio_atal(BaseResource):
         long_description="Modifie le statut d'une réservation de salle dans ATAL.",
         display_category="Location de Salles",
         display_order=11,
-        methods=["patch"],
+        methods=["get"],
         parameters={
             "room_loan_id": {
                 "description": "id de la réservation de salle",
@@ -811,18 +811,17 @@ class imio_atal(BaseResource):
     ):
         url = f"{self.base_url}/api/RoomLoans?id={room_loan_id}"
         headers = {
-            "accept": "application/json",
+            "accept": "*/*",
             "X-API-Key": self.api_key,
             "Content-Type": "application/json",
         }
-        payload = json.dumps({"RequestState": request_state})
+        payload = json.dumps({"RequestState": int(request_state)})
 
         try:
             response = requests.patch(
                 url,
                 headers=headers,
                 data=payload,
-                verify=False,
             )
         except RequestException as e:
             self.logger.warning(f'ATAL Error: {e}')
