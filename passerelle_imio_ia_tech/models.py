@@ -822,6 +822,7 @@ class imio_atal(BaseResource):
                 url,
                 headers=headers,
                 data=payload,
+                verify=False,
             )
         except RequestException as e:
             self.logger.warning(f'ATAL Error: {e}')
