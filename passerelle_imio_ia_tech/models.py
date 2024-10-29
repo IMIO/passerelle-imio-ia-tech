@@ -305,13 +305,54 @@ class imio_atal(BaseResource):
         }  # must return dict
 
     @endpoint(
+        name="get-parents-rooms",
+        perm="can_access",
+        description="Get noms des salles parents dans ATAL.",
+        long_description="Cherche les noms des salles parents dans ATAL.",
+        display_category="Location de Salles",
+        display_order=3,
+        methods=["get"],
+    )
+    def read_parents_rooms(self, request):
+        # liste des salles louables
+        rooms_name = self.read_rooms_name(request)["data"]
+
+        ids = {room["Id"] for room in rooms_name}  # Ensemble de tous les Ids
+        parent_rooms = [room for room in rooms_name if "ParentId" not in room or room["ParentId"] not in ids]
+
+        return {"data": parent_rooms}
+
+    @endpoint(
+        name="get-kids-rooms",
+        perm="can_access",
+        description="Get noms des salles enfants dans ATAL.",
+        long_description="Cherche les noms des salles enfants dans ATAL par rapport à un parent donné.",
+        display_category="Location de Salles",
+        display_order=4,
+        methods=["get"],
+        parameters={
+            "parent_id": {
+                "description": "id du parent",
+                "type": "int",
+                "example_value": "552",
+            },
+        },
+    )
+    def read_kids_rooms(self, request, parent_id):
+        # liste des salles louables
+        rooms_name = self.read_rooms_name(request)["data"]
+        kids_rooms = [room for room in rooms_name if room.get("ParentId") == parent_id]
+
+        return {"data": kids_rooms}
+
+    @endpoint(
         name="get-room-loans",
         perm="can_access",
         description="get Les locations de salles.",
         methods=["get"],
         long_description="Cherche les locations de salles dans ATAL.",
         display_category="Location de Salles",
-        display_order=3,
+        display_order=5,
     )
     def read_reservations_room(self, request):
         url = f"{self.base_url}/api/RoomLoans"
@@ -337,7 +378,7 @@ class imio_atal(BaseResource):
         methods=["get"],
         long_description="Lis une réservation de salle dans ATAL.",
         display_category="Location de Salles",
-        display_order=4,
+        display_order=6,
         parameters={
             "id": {
                 "description": "id de la réservation",
@@ -369,7 +410,7 @@ class imio_atal(BaseResource):
         methods=["get"],
         long_description="Cherche les détails des réservations de salles dans ATAL.",
         display_category="Location de Salles",
-        display_order=5,
+        display_order=7,
     )
     def read_reservations_room_details(self, request):
         url = f"{self.base_url}/api/RoomLoans/Lines"
@@ -392,7 +433,7 @@ class imio_atal(BaseResource):
         description="Cherche les salles disponible pour une date donnée.",
         long_description="Cherche les salles disponible pour une date donnée dans ATAL.",
         display_category="Location de Salles",
-        display_order=6,
+        display_order=8,
         methods=["get"],
         parameters={
             "date_debut": {
@@ -475,7 +516,7 @@ class imio_atal(BaseResource):
         description="Cherche les dates disponible pour une salle.",
         long_description="Cherche les dates disponible pour une salle dans ATAL.",
         display_category="Location de Salles",
-        display_order=7,
+        display_order=9,
         methods=["get"],
         parameters={
             "room": {
@@ -518,7 +559,7 @@ class imio_atal(BaseResource):
         description="Générer la source de données des jours de disponibilité",
         long_description="Générer la source de données des jours de disponibilité pour une salle donnée dans ATAL.",
         display_category="Location de Salles",
-        display_order=8,
+        display_order=10,
         methods=["get"],
         parameters={
             "room": {
@@ -567,7 +608,7 @@ class imio_atal(BaseResource):
         description="Générer la source de données des heures de disponibilité",
         long_description="Générer la source de données des heures de disponibilité pour une salle donnée dans ATAL.",
         display_category="Location de Salles",
-        display_order=8,
+        display_order=11,
         methods=["get"],
         parameters={
             "room": {
@@ -617,7 +658,7 @@ class imio_atal(BaseResource):
         description="Réserver une salle",
         long_description="Réserver une salle dans ATAL avec plusieurs plages horaires.",
         display_category="Location de Salles",
-        display_order=9,
+        display_order=12,
         methods=["post"],
         parameters={
             "room": {
@@ -680,7 +721,7 @@ class imio_atal(BaseResource):
         description="Inscrit une réservation de salle.",
         long_description="Inscrit une réservation de salle dans ATAL.",
         display_category="Location de Salles",
-        display_order=10,
+        display_order=13,
         methods=["get"],
         parameters={
             "date_debut": {
@@ -788,7 +829,7 @@ class imio_atal(BaseResource):
         description="Modifie le statut d'une réservation de salle.",
         long_description="Modifie le statut d'une réservation de salle dans ATAL.",
         display_category="Location de Salles",
-        display_order=11,
+        display_order=14,
         methods=["get"],
         parameters={
             "room_loan_id": {
