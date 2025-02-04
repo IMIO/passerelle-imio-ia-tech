@@ -1279,3 +1279,52 @@ class imio_atal(BaseResource):
         )
 
         return {"data": sorted_parsed_thematics}
+
+############
+# Fichiers #
+############
+
+    @endpoint(
+        name="get-attachments",
+        perm="can_access",
+        description="Get fichier.",
+        long_description="Télécharge un fichier dans ATAL.",
+        display_category="Fichiers",
+        display_order=1,
+        methods=["get"],
+        parameters={
+            "attachments_id": {
+                "description": "id du fichier",
+                "type": "int",
+                "example_value": "3000",
+            },
+        },
+    )
+    def read_room(self, request, attachments_id):
+
+        url_attachments = f"{self.base_url}/api/Attachments/{attachments_id}"
+        headers = {
+            "accept": "application/json",
+            "X-API-Key": self.api_key,
+        }
+
+        response_attachments = self.requests.get(
+            url_attachments,
+            headers=headers,
+            verify=False,
+        )
+        response_attachments.raise_for_status()
+
+        key = response_attachments.json().get("Key")
+        if not key:
+            raise APIError("Key not found in response")
+
+        url_download = f"{self.base_url}/api/Attachments/Download/{key}"
+        response_download = self.requests.get(
+            url_download,
+            headers=headers,
+            verify=False,
+        )
+        response_download.raise_for_status()
+
+        return base64.b64encode(response_download.content).decode("utf-8")
