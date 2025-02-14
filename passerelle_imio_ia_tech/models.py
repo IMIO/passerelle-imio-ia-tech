@@ -1315,7 +1315,8 @@ class imio_atal(BaseResource):
         )
         response_attachments.raise_for_status()
 
-        key = response_attachments.json().get("Key")
+        response_attachments_json = response_attachments.json()
+        key = response_attachments_json.get("Key")
         if not key:
             raise APIError("Key not found in response")
 
@@ -1327,4 +1328,12 @@ class imio_atal(BaseResource):
         )
         response_download.raise_for_status()
 
-        return base64.b64encode(response_download.content).decode("utf-8")
+        response = {
+            "content": base64.b64encode(response_download.content).decode("utf-8"),
+            "filename": response_attachments_json.get("FileName"),
+            "content_type": "image/jpeg",
+            "content_is_base64": True,
+            "id": response_attachments_json.get("Id"),
+        }
+
+        return response
