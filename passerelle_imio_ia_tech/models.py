@@ -1300,7 +1300,7 @@ class imio_atal(BaseResource):
             },
         },
     )
-    def read_room(self, request, attachments_id):
+    def get_attachments(self, request, attachments_id):
 
         url_attachments = f"{self.base_url}/api/Attachments/{attachments_id}"
         headers = {
@@ -1331,9 +1331,48 @@ class imio_atal(BaseResource):
         response = {
             "content": base64.b64encode(response_download.content).decode("utf-8"),
             "filename": response_attachments_json.get("FileName"),
-            "content_type": "image/jpeg",
             "content_is_base64": True,
             "id": response_attachments_json.get("Id"),
         }
 
         return response
+
+    @endpoint(
+        name="get-attachments-list",
+        perm="can_access",
+        description="Get fichiers.",
+        long_description="Télécharge des fichiers dans ATAL.",
+        display_category="Fichiers",
+        display_order=2,
+        methods=["get"],
+        parameters={
+            "room_id": {
+                "description": "id de la salle",
+                "type": "int",
+                "example_value": "11644",
+            },
+            "exclude": {
+                "description": "Liste des éléments à exclure",
+                "type": "list",
+                "example_value": "[18249, 18250]",
+            },
+        },
+    )
+    def get_attachments_list(self, request, room_id, exclude=None):
+
+        if exclude is None:
+            exclude = []
+        else:
+            exclude = json.loads(exclude)
+
+        room_info = self.read_room(request, room_id, "FeaturesValues")
+
+        features_value = room_info.get("FeaturesValues", [])
+
+        attachments = []
+
+        for feature in features_value:
+            if feature.get("AttachmentId") and feature.get("AttachmentId") not in exclude:
+                attachments.append(self.get_attachments(request, feature.get("AttachmentId")))
+
+        return attachments
