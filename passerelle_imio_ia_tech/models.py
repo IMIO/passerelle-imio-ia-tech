@@ -7,10 +7,12 @@ from io import BytesIO
 
 import requests
 from django.db import models
+from django.conf import settings
 from django.http import JsonResponse
 
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
+from passerelle.base.signature import sign_url
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
 from requests import RequestException
@@ -1369,10 +1371,30 @@ class imio_atal(BaseResource):
 
         features_value = room_info.get("FeaturesValues", [])
 
-        attachments = []
+        response = []
+        combos = self.get_service("combo")
+        combo = [combo for combo in combos if not combo.get("is-portal-agent")][0]
 
         for feature in features_value:
             if feature.get("AttachmentId") and feature.get("AttachmentId") not in exclude:
-                attachments.append(self.get_attachments(request, feature.get("AttachmentId")))
+                attachment = self.get_attachments(request, feature.get("AttachmentId"))
+                signed_url = sign_url(
+                    url=f"{combo['url']}api/assets/set/salle:{feature.get('AttachmentId')}/?orig={combo.get('orig')}",
+                    key=combo.get("secret"),
+                )
+                combo_response = self.requests.post(signed_url, json={"asset": attachment})
+                combo_response.raise_for_status()
+                response.append(combo_response.json())
 
-        return attachments
+        return response
+
+
+################
+# Utilitaires #
+################
+
+    def get_service(self, service_id):
+        if not getattr(settings, "KNOWN_SERVICES", {}).get(service_id):
+            return
+        services = list(settings.KNOWN_SERVICES[service_id].values())
+        return services
