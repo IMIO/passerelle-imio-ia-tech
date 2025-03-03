@@ -7,10 +7,12 @@ from io import BytesIO
 
 import requests
 from django.db import models
+from django.conf import settings
 from django.http import JsonResponse
 
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
+from passerelle.base.signature import sign_url
 from passerelle.utils.api import endpoint
 from passerelle.utils.jsonresponse import APIError
 from requests import RequestException
@@ -1300,7 +1302,7 @@ class imio_atal(BaseResource):
             },
         },
     )
-    def read_room(self, request, attachments_id):
+    def get_attachments(self, request, attachments_id):
 
         url_attachments = f"{self.base_url}/api/Attachments/{attachments_id}"
         headers = {
@@ -1315,7 +1317,8 @@ class imio_atal(BaseResource):
         )
         response_attachments.raise_for_status()
 
-        key = response_attachments.json().get("Key")
+        response_attachments_json = response_attachments.json()
+        key = response_attachments_json.get("Key")
         if not key:
             raise APIError("Key not found in response")
 
@@ -1327,4 +1330,71 @@ class imio_atal(BaseResource):
         )
         response_download.raise_for_status()
 
-        return base64.b64encode(response_download.content).decode("utf-8")
+        response = {
+            "content": base64.b64encode(response_download.content).decode("utf-8"),
+            "filename": response_attachments_json.get("FileName"),
+            "content_is_base64": True,
+            "id": response_attachments_json.get("Id"),
+        }
+
+        return response
+
+    @endpoint(
+        name="get-attachments-list",
+        perm="can_access",
+        description="Get fichiers.",
+        long_description="Télécharge des fichiers dans ATAL.",
+        display_category="Fichiers",
+        display_order=2,
+        methods=["get"],
+        parameters={
+            "room_id": {
+                "description": "id de la salle",
+                "type": "int",
+                "example_value": "11644",
+            },
+            "exclude": {
+                "description": "Liste des éléments à exclure",
+                "type": "list",
+                "example_value": "[18249, 18250]",
+            },
+        },
+    )
+    def get_attachments_list(self, request, room_id, exclude=None):
+
+        if exclude is None:
+            exclude = []
+        else:
+            exclude = json.loads(exclude)
+
+        room_info = self.read_room(request, room_id, "FeaturesValues")
+
+        features_value = room_info.get("FeaturesValues", [])
+
+        response = []
+        combos = self.get_service("combo")
+        combo = [combo for combo in combos if not combo.get("is-portal-agent")][0]
+
+        for feature in features_value:
+            if feature.get("AttachmentId") and feature.get("AttachmentId") not in exclude:
+                attachment = self.get_attachments(request, feature.get("AttachmentId"))
+                signed_url = sign_url(
+                    url=f"{combo['url']}api/assets/set/salle:{feature.get('AttachmentId')}/?orig={combo.get('orig')}",
+                    key=combo.get("secret"),
+                )
+                combo_response = self.requests.post(signed_url, json={"asset": attachment})
+                combo_response.raise_for_status()
+                response.append(combo_response.json())
+
+        return response
+
+
+################
+# Utilitaires #
+################
+
+    def get_service(self, service_id):
+        if not getattr(settings, "KNOWN_SERVICES", {}).get(service_id):
+            return
+        services = list(settings.KNOWN_SERVICES[service_id].values())
+        return services
