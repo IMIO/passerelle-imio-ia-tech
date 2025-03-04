@@ -1388,6 +1388,56 @@ class imio_atal(BaseResource):
 
         return response
 
+############
+# Features #
+############
+
+    @endpoint(
+        name="get-features",
+        perm="can_access",
+        description="Get Features.",
+        long_description="Récupère la liste des Features dans ATAL.",
+        display_category="Features",
+        display_order=1,
+        methods=["get"],
+        parameters={
+            "expands": {
+                "description": "Liste à étendre dans le résultat retourné (valeurs séparées par une virgule)",
+                "type": "str",
+                "example_value": "FeatureCategory",
+            },
+            "filters": {
+                "description": "Filtre en query string",
+                "type": "str",
+                "example_value": "Id eq 177",
+            },
+        },
+    )
+    def get_features(self, request, expands=None, filters=None):
+        url = f"{self.base_url}/api/Features"
+        headers = {
+            "accept": "application/json",
+            "X-API-Key": self.api_key,
+        }
+
+        params = {}
+        if expands:
+            params["$expand"] = expands
+        if filters:
+            params["$filter"] = filters
+
+        if not params:
+            params["$top"] = 100
+
+        response = self.requests.get(
+            url,
+            headers=headers,
+            params=params,
+            verify=False,
+        )
+        response.raise_for_status()
+
+        return {"data": response.json()}
 
 ################
 # Utilitaires #
