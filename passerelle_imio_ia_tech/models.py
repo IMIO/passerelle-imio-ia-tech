@@ -1,5 +1,7 @@
 import base64
 import datetime
+from datetime import tzinfo
+from zoneinfo import ZoneInfo
 import json
 import time
 import unicodedata
@@ -519,55 +521,46 @@ class imio_atal(BaseResource):
         },
     )
     def read_rooms_dispo(self, request, date_debut, date_fin, heure_debut, heure_fin):
+        # String datetime
+        datetime_debut = f"{date_debut} {heure_debut}"
+        datetime_fin = f"{date_fin} {heure_fin}"
         # format date
-        date_debut = datetime.date(
-            int(date_debut.split("-")[0]),
-            int(date_debut.split("-")[1]),
-            int(date_debut.split("-")[2]),
-        )
-        date_fin = datetime.date(
-            int(date_fin.split("-")[0]),
-            int(date_fin.split("-")[1]),
-            int(date_fin.split("-")[2]),
-        )
-        # format heure
-        heure_debut = time.strptime(heure_debut, "%H:%M")
-        heure_debut = datetime.time(heure_debut.tm_hour, heure_debut.tm_min)
-        heure_fin = time.strptime(heure_fin, "%H:%M")
-        heure_fin = datetime.time(heure_fin.tm_hour, heure_fin.tm_min)
+        format_date = "%Y-%m-%d %H:%M"
+        datetime_debut = datetime.datetime.strptime(datetime_debut, format_date)
+        datetime_fin = datetime.datetime.strptime(datetime_fin, format_date)
+        # TimeZone
+        timezone = ZoneInfo("Europe/Brussels")
+        datetime_debut = datetime_debut.replace(tzinfo=timezone)
+        datetime_fin = datetime_fin.replace(tzinfo=timezone)
+        # ISO format
+        datetime_debut = datetime_debut.isoformat()
+        datetime_fin = datetime_fin.isoformat()
 
-        # datetime debut demande location
-        datetime_debut = datetime.datetime.combine(date_debut, heure_debut)
-        # datetime fin demande location
-        datetime_fin = datetime.datetime.combine(date_fin, heure_fin)
+        # query pour les locations
+        query = f"(StartDate lt {datetime_fin}) and (EndDate gt {datetime_debut})"
 
         # liste des locations
-        liste_location = self.read_reservations_room_details(request)
+        liste_location = self.read_reservations_room_details(request, filters=query)
 
         # init liste rooms non dispo
-        room_non_dispo = []
+        room_non_dispo = [location.get("RoomId") for location in liste_location]
+        # suppression des doublons
+        room_non_dispo = list(set(room_non_dispo))
+        # Check parents/kids
+        room_parents_kids_non_dispo = []
+        for room in room_non_dispo:
+            room = int(room)
+            room_parents_kids_non_dispo.extend(self.get_rooms_for_indisponibilities(request, room))
 
-        # parcours des locations
-        for location in liste_location:
-            # transformation des dates de location en datetime
-            debut_location = string_to_datetime(location["StartDate"])
-            fin_location = string_to_datetime(location["EndDate"])
-
-            # tri des salles en fonction des dates de locations
-            if (
-                    debut_location <= datetime_debut <= fin_location
-                    or debut_location <= datetime_fin <= fin_location
-                    or datetime_debut <= debut_location <= datetime_fin
-                    or datetime_debut <= fin_location <= datetime_fin
-            ):
-                room_non_dispo.append(location.get("RoomId"))
+        # suppression des doublons
+        room_parents_kids_non_dispo = list(set(room_parents_kids_non_dispo))
 
         # liste des salles
         rooms = self.read_rooms_name(request)["data"]
 
         # tri des salles pour avoir les dispo
         return {
-            "data": [x for x in rooms if x["Id"] not in room_non_dispo]
+            "data": [x for x in rooms if int(x["Id"]) not in room_parents_kids_non_dispo]
         }  # must return dict
 
     @endpoint(
