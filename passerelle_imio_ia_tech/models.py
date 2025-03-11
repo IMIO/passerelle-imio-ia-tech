@@ -267,16 +267,14 @@ class imio_atal(BaseResource):
         display_order=1,
         methods=["get"],
     )
-    def read_patrimoines_louable(self, request):
+    def read_patrimoines_louable(self, request, filters=None):
         url = f"{self.base_url}/api/Patrimonies"
         headers = {
             "accept": "application/json",
             "X-API-Key": self.api_key,
         }
 
-        params = {
-            "$filter": "CanBeLoaned",
-        }
+        params = {"$filter": f"CanBeLoaned {filters}" if filters else "CanBeLoaned"}
 
         response = self.requests.get(
             url,
@@ -472,15 +470,17 @@ class imio_atal(BaseResource):
         display_category="Location de Salles",
         display_order=8,
     )
-    def read_reservations_room_details(self, request):
+    def read_reservations_room_details(self, request, filters=None):
         url = f"{self.base_url}/api/RoomLoans/Lines"
         headers = {
             "accept": "application/json",
             "X-API-Key": self.api_key,
         }
+        params = {"$filter": filters} if filters else None
         response = self.requests.get(
             url,
             headers=headers,
+            params=params,
             verify=False,
         )
         response.raise_for_status()
@@ -591,25 +591,20 @@ class imio_atal(BaseResource):
             },
         },
     )
-    def read_dates_dispo(self, request, room, delai=0):
-        # liste des locations
-        locations = self.read_reservations_room_details(request)
-
+    def read_dates_dispo(self, request, delai=0, filters=None):
         # définition de la date d'aujourd'hui en datetime
         today = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time())
 
-        # convert string to dict
-        # room = ast.literal_eval(room)
+        start_date = today + datetime.timedelta(days=delai)
 
-        # tri des locations par rapport à une salle
-        locations = [
-            x
-            for x in locations
-            if "RoomId" in x
-               and x["RoomId"] == int(room)
-               and (today + datetime.timedelta(days=delai))
-               < string_to_datetime(x["StartDate"])
-        ]
+        query = filters if filters else None
+
+        start_string = start_date.strftime("%Y-%m-%d")
+
+        query = query + f" and StartDate ge {start_string}" if query else f"StartDate ge {start_string}"
+
+        # liste des locations
+        locations = self.read_reservations_room_details(request, filters=query)
 
         return {"data": locations}
 
@@ -640,7 +635,10 @@ class imio_atal(BaseResource):
         },
     )
     def generate_day_availability(self, request, room, start=0, end=365):
-        indisponibilites = self.read_dates_dispo(request, room, start)["data"]
+        rooms = self.get_rooms_for_indisponibilities(request, room)
+
+        indisponibilites = self.get_indisponibilities(request, rooms, start)
+
         start_date = datetime.date.today() + datetime.timedelta(days=start)
         end_date = datetime.date.today() + datetime.timedelta(days=end)
         delta = end_date - start_date
@@ -689,7 +687,10 @@ class imio_atal(BaseResource):
         },
     )
     def generate_hour_availability(self, request, room, start=0, end=365):
-        indisponibilites = self.read_dates_dispo(request, room, start)["data"]
+        rooms = self.get_rooms_for_indisponibilities(request, room)
+
+        indisponibilites = self.get_indisponibilities(request, rooms, start)
+
         start_datetime = datetime.datetime.combine(datetime.date.today(), datetime.datetime.min.time()) + datetime.timedelta(days=start)
         end_datetime = datetime.datetime.combine(datetime.date.today(), datetime.time(23, 0)) + datetime.timedelta(days=end)
         delta = int((end_datetime - start_datetime).total_seconds() / 3600)
@@ -1448,3 +1449,27 @@ class imio_atal(BaseResource):
             return
         services = list(settings.KNOWN_SERVICES[service_id].values())
         return services
+
+    def get_rooms_for_indisponibilities(self, request, room):
+        rooms = [room,]
+        # Get infos salle pour récupérer le parent s'il existe
+        infos_salle = self.read_room(request, room)
+        parent_id = infos_salle.get("ParentId")
+        # Vérification si le parent est louable
+        if parent_id:
+            parent_room = self.read_patrimoines_louable(request, f"and Id eq {parent_id}")
+            if parent_room:
+                rooms.append(parent_id)
+        # Vérification s'il y a des enfants louable
+        kids_rooms = self.read_kids_rooms(request, room)["data"]
+        if kids_rooms:
+            rooms.extend([x["Id"] for x in kids_rooms])
+
+        return rooms
+
+    def get_indisponibilities(self, request, rooms, start):
+        query = ""
+        for room in rooms:
+            query += f" or RoomId eq {room}" if query else f"RoomId eq {room}"
+        indisponibilites = self.read_dates_dispo(request, start, filters=query)["data"]
+        return indisponibilites
