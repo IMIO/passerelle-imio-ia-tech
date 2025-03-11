@@ -1371,7 +1371,11 @@ class imio_atal(BaseResource):
 
         for feature in features_value:
             if feature.get("AttachmentId") and feature.get("AttachmentId") not in exclude:
-                attachment = self.get_attachments(request, feature.get("AttachmentId"))
+                try:
+                    attachment = self.get_attachments(request, feature.get("AttachmentId"))
+                except Exception as e:
+                    self.logger.warning(f"Error while getting attachment {feature.get('AttachmentId')}: {e}")
+                    continue
                 signed_url = sign_url(
                     url=f"{combo['url']}api/assets/set/salle:{feature.get('AttachmentId')}/?orig={combo.get('orig')}",
                     key=combo.get("secret"),
