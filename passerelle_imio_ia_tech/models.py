@@ -364,27 +364,11 @@ class imio_atal(BaseResource):
             "expands": {
                 "description": "Liste des éléments à étendre",
                 "type": "string",
-                "example_value": "Addresses,Classifications,ControlAffectations,FeaturesValues,ThirdPartyAffectations",
+                "example_value": "Addresses,Classifications,ControlAffectations,FeaturesValues($expand=FeatureLists,FeatureList),ThirdPartyAffectations",
             },
         },
     )
     def read_room(self, request, room_id, expands=None):
-        def check_expand():
-            if not expands:
-                return
-            for expand in expands.split(","):
-                if expand not in expand_authorized:
-                    self.logger.warning(f"Expand {expand} not in authorized list")
-
-        expand_authorized = [
-            "Addresses",
-            "Classifications",
-            "ControlAffectations",
-            "FeaturesValues",
-            "ThirdPartyAffectations",
-        ]
-        check_expand()
-
         url = f"{self.base_url}/api/Patrimonies/{room_id}"
         headers = {
             "accept": "application/json",
