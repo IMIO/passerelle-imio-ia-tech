@@ -674,20 +674,26 @@ class imio_atal(BaseResource):
         hours = [start_datetime + datetime.timedelta(hours=x) for x in range(delta + 1)]
         free_hours = []
         for hour in hours:
-            text = hour.strftime("%d/%m/%Y %H:%M")
-            id = hour.strftime("%Y-%m-%dT%H:%M")
-            start_date = hour.strftime("%Y-%m-%d")
-            end_date = hour.strftime("%Y-%m-%d")
-            start_time = hour.strftime("%H:%M")
-            end_time = hour.strftime("%H:59")
-            disabled = True in [
-                string_to_datetime(x["StartDate"]).date() <= hour.date() <= string_to_datetime(x["EndDate"]).date() and
-                string_to_datetime(x["StartDate"]).hour <= hour.hour <= string_to_datetime(x["EndDate"]).hour
-                for x in indisponibilites
-            ]
-            free_hours.append(
-                {"text": text, "id": id, "start_date": start_date, "end_date": end_date, "start_time": start_time,
-                 "end_time": end_time, "disabled": disabled})
+            disabled = False
+            for x in indisponibilites:
+                start_indispo = string_to_datetime(x["StartDate"])
+                end_indispo = string_to_datetime(x["EndDate"])
+
+                # L'heure est bloquée si elle tombe pile dedans ou sur les bornes
+                if start_indispo <= hour <= end_indispo:
+                    disabled = True
+                    break  # Pas besoin de vérifier les autres indisponibilités pour cette heure
+
+            # Le reste de ton dictionnaire reste identique
+            free_hours.append({
+                "text": hour.strftime("%d/%m/%Y %H:%M"),
+                "id": hour.strftime("%Y-%m-%dT%H:%M"),
+                "start_date": hour.strftime("%Y-%m-%d"),
+                "end_date": hour.strftime("%Y-%m-%d"),
+                "start_time": hour.strftime("%H:%M"),
+                "end_time": hour.strftime("%H:59"),
+                "disabled": disabled
+            })
         return {"data": free_hours}
 
     @endpoint(
