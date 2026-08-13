@@ -3,6 +3,7 @@ import datetime
 from datetime import tzinfo
 from zoneinfo import ZoneInfo
 import json
+import mimetypes
 import time
 import unicodedata
 from io import BytesIO
@@ -11,6 +12,7 @@ import requests
 from django.db import models
 from django.conf import settings
 from django.http import JsonResponse
+from django.http import HttpResponse
 
 # from django.utils.six.moves.urllib_parse import urljoin
 from passerelle.base.models import BaseResource
@@ -31,6 +33,52 @@ def string_to_datetime(date_string):
     format_datetime = "%Y-%m-%dT%H:%M"
 
     return datetime.datetime.strptime(date_string[:16], format_datetime)
+
+
+# Signatures binaires des formats renvoyés par ATAL, utilisées en dernier recours
+# quand ni l'en-tête HTTP ni le nom du fichier ne donnent de type exploitable.
+# Sans type correct, w.c.s. suffixe le nom du fichier avec ".bin".
+FILE_SIGNATURES = (
+    (b"%PDF-", "application/pdf"),
+    (b"\x89PNG\r\n\x1a\n", "image/png"),
+    (b"\xff\xd8\xff", "image/jpeg"),
+    (b"GIF87a", "image/gif"),
+    (b"GIF89a", "image/gif"),
+    (b"II*\x00", "image/tiff"),
+    (b"MM\x00*", "image/tiff"),
+    # OLE2 : .doc, .xls, .ppt, .msg
+    (b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1", "application/msword"),
+)
+
+# Conteneurs ZIP (OOXML, OpenDocument) : le type se lit dans les premiers octets
+# de l'archive, tous partageant la même signature "PK\x03\x04".
+ZIP_CONTENT_MARKERS = (
+    (b"word/", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+    (b"xl/", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"),
+    (b"ppt/", "application/vnd.openxmlformats-officedocument.presentationml.presentation"),
+    (b"mimetypeapplication/vnd.oasis.opendocument.text", "application/vnd.oasis.opendocument.text"),
+    (b"mimetypeapplication/vnd.oasis.opendocument.spreadsheet", "application/vnd.oasis.opendocument.spreadsheet"),
+)
+
+
+def guess_content_type_from_content(content):
+    """
+    devine le type MIME d'un fichier à partir de son contenu binaire
+    :param content: contenu du fichier (bytes)
+    :return: type MIME (string) ou None si le format n'est pas reconnu
+    """
+    for signature, content_type in FILE_SIGNATURES:
+        if content.startswith(signature):
+            return content_type
+
+    if content.startswith(b"PK\x03\x04"):
+        header = content[:4096]
+        for marker, content_type in ZIP_CONTENT_MARKERS:
+            if marker in header:
+                return content_type
+        return "application/zip"
+
+    return None
 
 
 class imio_atal(BaseResource):
@@ -1284,6 +1332,77 @@ class imio_atal(BaseResource):
 ############
 # Fichiers #
 ############
+
+    @endpoint(
+        name="get-attachments-file",
+        perm="can_access",
+        description="Get fichier.",
+        long_description="Télécharge un fichier dans ATAL.",
+        display_category="Fichiers",
+        display_order=1,
+        methods=["get"],
+        parameters={
+            "attachments_id": {
+                "description": "id du fichier",
+                "type": "int",
+                "example_value": "3000",
+            },
+        },
+    )
+    def get_attachments_files(self, request, attachments_id):
+
+        url_attachments = f"{self.base_url}/api/Attachments/{attachments_id}"
+        headers = {
+            "accept": "application/json",
+            "X-API-Key": self.api_key,
+        }
+
+        response_attachments = self.requests.get(
+            url_attachments,
+            headers=headers,
+            verify=False,
+        )
+        response_attachments.raise_for_status()
+
+        response_attachments_json = response_attachments.json()
+        key = response_attachments_json.get("Key")
+        if not key:
+            raise APIError("Key not found in response")
+
+        url_download = f"{self.base_url}/api/Attachments/Download/{key}"
+        response_download = self.requests.get(
+            url_download,
+            headers=headers,
+            verify=False,
+        )
+        response_download.raise_for_status()
+
+        filename = response_attachments_json.get("FileName")
+
+        # Le Content-Type doit être exact : côté w.c.s. il détermine à la fois le
+        # type de la pièce jointe et l'extension ajoutée au nom du fichier.
+        content_type = (response_download.headers.get("Content-Type") or "").split(";")[0].strip()
+        if content_type in ("", "application/octet-stream", "text/html"):
+            # ATAL ne donne pas de type exploitable : on se rabat sur l'extension
+            # du nom du fichier, puis sur la signature binaire du contenu.
+            content_type = (
+                (mimetypes.guess_type(filename)[0] if filename else None)
+                or guess_content_type_from_content(response_download.content)
+                or "application/octet-stream"
+            )
+
+        response = HttpResponse(response_download.content, content_type=content_type)
+        if filename:
+            # les en-têtes HTTP sont encodés en latin-1 : on translittère le nom en
+            # ASCII pour éviter tout mojibake côté client.
+            ascii_filename = (
+                unicodedata.normalize("NFKD", filename).encode("ascii", "ignore").decode("ascii").strip()
+            )
+            if ascii_filename:
+                response["Content-Disposition"] = f'attachment; filename="{ascii_filename}"'
+
+        return response
+
 
     @endpoint(
         name="get-attachments",
