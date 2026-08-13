@@ -319,6 +319,59 @@ class imio_atal(BaseResource):
 
         return {"data": response.json()}  # must return dict
 
+    ###################
+    ### Patrimoines ###
+    ###################
+
+    @endpoint(
+        name="get-patrimonies",
+        perm="can_access",
+        description="Get patrimoine dans ATAL.",
+        long_description="Cherche le patrimoine dans ATAL divers filtres peuvent être ajouté",
+        display_category="Patrimoine",
+        display_order=1,
+        methods=["get"],
+        parameters={
+            "expands": {
+                "description": "Liste des éléments à étendre",
+                "type": "string",
+                "example_value": "FeaturesValues($expand=Feature($expand=ValueList))",
+            },
+            "filters": {
+                "description": "Filtrage du résultat",
+                "type": "string",
+                "example_value": "CanBeLoaned and Type eq 1",
+            },
+            "orderby" : {
+                "description": "Triage du résultat",
+                "type": "string",
+                "example_value": "Id",
+            }
+        },
+    )
+    def read_patrimonies(self, request, expands=None, filters=None, orderby=None):
+        url = f"{self.base_url}/api/Patrimonies"
+        headers = {
+            "accept": "application/json",
+            "X-API-Key": self.api_key,
+        }
+
+        params = {
+            "$expand": expands,
+            "$filter": filters,
+            "$orderby": orderby,
+        }
+
+        response = self.requests.get(
+            url,
+            headers=headers,
+            params=params,
+            verify=False,
+        )
+        response.raise_for_status()
+
+        return response.json()
+
     #########################
     ### Location de Salles###
     #########################
