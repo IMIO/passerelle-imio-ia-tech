@@ -49,6 +49,21 @@ class imio_atal(BaseResource):
     api_description = "Connecteur permettant d'intéragir avec une instance d'ATAL V6"
     category = "Connecteurs iMio"
 
+    # ATAL peut être lent à répondre. Sans cet attribut, les appels passant par
+    # self.requests héritent de settings.ENDPOINT_REQUESTS_TIMEOUT (5 s), que la vue
+    # des endpoints impose à settings.REQUESTS_TIMEOUT.
+    requests_timeout = 25
+
+    # Surcharge settings.REQUESTS_MAX_RETRIES pour ce seul connecteur : 2 nouvelles
+    # tentatives, soit 3 appels au maximum. Seules les méthodes idempotentes sont
+    # concernées (urllib3 exclut POST et PATCH par défaut), une demande de travaux
+    # ne peut donc pas être créée en double.
+    requests_max_retries = {
+        "total": 2,
+        # 1re nouvelle tentative immédiate, 2e après 1 seconde
+        "backoff_factor": 0.5,
+    }
+
     class Meta:
         verbose_name = "Connecteur ATAL (iMio)"
 
@@ -60,8 +75,8 @@ class imio_atal(BaseResource):
         display_category="Test",
     )
     def test(self, request=None):
-        atal_response = requests.get(
-            url=f"{self.base_url}/api/Test",
+        atal_response = self.requests.get(
+            f"{self.base_url}/api/Test",
             headers={"Accept": "text/plain", "X-API-Key": self.api_key},
             verify=False,
         )
@@ -78,8 +93,8 @@ class imio_atal(BaseResource):
         display_category="Utilitaires",
     )
     def third_parties(self, request):
-        response = requests.get(
-            url=f"{self.base_url}/api/ThirdParties?type=2",
+        response = self.requests.get(
+            f"{self.base_url}/api/ThirdParties?type=2",
             headers={"Accept": "application/json", "X-API-Key": self.api_key},
             verify=False,
         )
@@ -903,7 +918,7 @@ class imio_atal(BaseResource):
         payload = json.dumps({"RequestState": int(request_state)})
 
         try:
-            response = requests.patch(
+            response = self.requests.patch(
                 url,
                 headers=headers,
                 data=payload,
